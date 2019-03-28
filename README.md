@@ -11,20 +11,20 @@ CuratePlasmids is a command-line tool for identifying bacterial plasmids from th
 * [Background and methods](#Background-and-methods)
 * [Options and usage](#Options-and-usage)
 * [Output files](#Output-files)
-* [FAQ](#faq)
+* [Acknowledgements](#Acknowledgements)
 * [License](#License)
 
 
 
 # Introduction
 
-Retrieving plasmid sequences from the NCBI nucleotide database requires quality-filtering to exclude partial plasmid sequences or chromosomal sequences mis-annotated as plasmids. I previously outlined methods to curate NCBI plasmids (Orlek _et al_. 2017)[https://www.ncbi.nlm.nih.gov/pubmed/28286183]. Following similar methods, CuratePlasmids allows users to retrieve putative plasmid sequences from NCBI and then characterise them by detecting [replicon loci](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and [rMLST loci](https://pubmlst.org/rmlst/), so that plasmid sequences can be distinguished. CuratePlasmids also allows users to characterise their in-house assembled sequences.<br>
+Retrieving plasmid sequences from the NCBI nucleotide database requires quality-filtering to exclude partial plasmid sequences, or chromosomal sequences mis-annotated as plasmids. I previously outlined methods to curate NCBI plasmids [Orlek _et al_. 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183). Following similar methods, CuratePlasmids allows users to retrieve putative plasmid sequences from NCBI and then characterise them by detecting [replicon loci](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and [rMLST loci](https://pubmlst.org/rmlst/), so that plasmid sequences can be distinguished. CuratePlasmids also allows users to characterise their in-house assembled sequences.<br>
 
 [PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) is an online database of curated plasmids, updated every ~3 months, so this is the easiest way to get hold of NCBI plasmid sequences. However, CuratePlasmids is useful if you want to:
 * Retrive the most up-to-date set of plasmids.
 * Characterise in-house sequence data that has not yet been uploaded to NCBI.
-* Identify ('chromid')[https://www.ncbi.nlm.nih.gov/pubmed/20080407] sequences.
-* Check the curation process at each step (which sequences are being excluded and why); and use this to fine-tune curation methods. 
+* Identify ['chromid'](https://www.ncbi.nlm.nih.gov/pubmed/20080407) sequences.
+* Check the curation process at each step (which sequences are being excluded and why); and use this to fine-tune curation methods if desired. 
 
 
 # Requirements
@@ -35,7 +35,7 @@ Retrieving plasmid sequences from the NCBI nucleotide database requires quality-
 * [edirect](https://www.ncbi.nlm.nih.gov/books/NBK179288/)
 * The [rMLST database](https://pubmlst.org/rmlst/) (follow installation instructions below)
 
-
+Note, the [PlasmidFinder](https://bitbucket.org/genomicepidemiology/plasmidfinder_db) database for replicon typing is included in the repository (retrieved 23-Apr-2018). Both "enterobacteriaceae" and "gram_positive" components of the database are included. You can use a more recent version of PlasmidFinder if you wish (see [Options and usage](#Options-and-usage)).
 
 # Installation
 
@@ -45,29 +45,29 @@ First install the repository:<br>
 git clone https://github.com/AlexOrlek/ATCG.git
 cd ATCG
 ```
-You should find the executable scripts (`curateplasmids.py` `database_setup.py`) within the repository directory. If you add the path of this directory to your [$PATH variable](https://www.computerhope.com/issues/ch001647.htm), then ATCG can be run by calling the executable scripts e.g. `curateplasmids.py [`*`arguments...`*`]` from any directory location.
+You should find the executable scripts (`curateplasmids.py` and `database_setup.py`) within the repository directory. If you add the path of this directory to your [$PATH variable](https://www.computerhope.com/issues/ch001647.htm), then ATCG can be run by calling the executable scripts e.g. `curateplasmids.py [`*`arguments...`*`]` from any directory location.
 
 __Installing the rMLST database__:
 
-The ribsomal multi-locus sequence typing (rMLST) database comprises sequences of allelic ribosomal loci; these sequences can be used as chromosomal markers i.e to detect chromosomal as opposed to plasmid sequence. The database is free, but you will need to agree to an associated licence agreement which __forbids the distribution of the database__ in order to protect Intellectual Property.
+The ribsomal multi-locus sequence typing (rMLST) database comprises sequences of allelic ribosomal loci; these sequences can be used as chromosomal markers i.e to detect chromosomal as opposed to plasmid sequence. The database is free, but you will need to agree to an associated licence agreement which __forbids the distribution of the database__, in order to protect the Intellectual Property.
 
 To gain access and install the database, follow these steps:
-*Register for a PubMLST account if you do not already have one. The link to register is [here](https://pubmlst.org/bigsdb). Click on "Register for a site-wide account".
-*Login to your account at https://pubmlst.org/bigsdb and request access to Ribosomal MLST genome and Ribosomal MLST locus/sequence definitions under Registrations. Additionally, email Keith Jolley (keith.jolley@zoo.ox.ac.uk) and request a consumer id and secret so that you'll be able to access the database programatically.
-*Put your consumer id and secret into a text file (file name does not matter), with the id on the first line and the secret on the second. The file contents should look something like the below snippet:<br>
+* Register for a PubMLST account if you do not already have one. The link to register is [here](https://pubmlst.org/bigsdb). Click on "Register for a site-wide account".
+* Login to your account at https://pubmlst.org/bigsdb and request access to Ribosomal MLST genome and Ribosomal MLST locus/sequence definitions under Registrations. Additionally, email Keith Jolley (keith.jolley@zoo.ox.ac.uk) and request a consumer id and secret so that you'll be able to access the database programatically.
+* Put your consumer id and secret into a text file (file name does not matter), with the id on the first line and the secret on the second. The file contents should look something like the below snippet:
 
 ```bash
 efKXmqp2D0EBlMBkZaGC2lPf
 F$M+fQ2AFFB2YBDfF9fpHF^qSWJdmmN%L4Fxf5Gur3
 ```
 
-*Install the database by running the `database_setup.py` executable, providing the `-s` flag with the file containing the secret id and secret:<br>
+* Install the database by running the `database_setup.py` executable, providing the `-s` flag with the file containing the secret id and secret:<br>
 
 ```bash
 database_setup.py -s secretfile.txt`
 ```
 
-*Follow the instructions that appear on screeen. The rMLST database will be installed in the databases folder within the repository.
+* Follow the instructions that appear on screeen. The rMLST database will be installed in the databases directory within the repository.
 
 
 
@@ -76,6 +76,12 @@ database_setup.py -s secretfile.txt`
 To retrive and curate bacterial plasmids from NCBI:
 
 `curateplasmids.py -e first.last@email.com -o output-directory`
+
+
+To retrieve and curate a custom set of NCBI accessions:
+
+`curateplasmids.py -e first.last@email.com --accessions myaccessions.txt -o output-directory`
+
 
 To curate your own plasmid sequences, provide an input multifasta file:
 
@@ -86,6 +92,14 @@ To curate your own plasmid sequences, provide an input multifasta file:
 # Options and usage
 
 `curateplasmids.py --help` produces a summary of all the options.
+
+
+`--enterobacdbpath` and `--gramposdbpath` flags can be provided with paths to your own PlasmidFinder enterobacteriaceae and gram_positive BLAST databases (created by running the `makeblastdb` command on the fasta files using [command line BLAST](https://www.ncbi.nlm.nih.gov/books/NBK279688/))<br>
+The `--taxonomyquery` and `--datequery` flags allow the NCBI query to be customised according to the source organism of the accession and the date the accession was first added to NCBI.
+The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions.
+The `--retrieveaccessionsonly` flag retrives accessions and runs the initial title text-based filtering, but not the more time-consuming BLAST-based filtering (see [Background and methods](#background-and-methods)).<br>
+Therefore, if you wish to update an existing database with more recent accessions, you could run CuratePlasmids with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of CuratePlasmids by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.
+
 
 
 # Output files
@@ -101,16 +115,16 @@ plasmidfinder                | outputs from BLASTing accessions_filtered.fa agai
 rmlst                        | outputs from BLASTing accessions_filtered.fa against the rMLST database
 plasmids.fa		     | plasmid sequences
 plasmids.tsv		     | plasmid accessions
-rmlstrepaccessions.tsv	     | filtered accessions that have both a replicon and rmlst loci detected (and are therefore not included in plasmids.fa)
+rmlstrepaccessions.tsv	     | filtered accessions that have one or more replicon and rmlst loci detected (and are therefore not included in plasmids.fa)
 rmlstonlyaccessions.tsv	     | filtered accessions that have one or more rmlst loci detected (and therefore are not included in plasmids.fa)
 
-The .tsv output files contain the following columns: accession, topology (circular/linear), length, title, completeness (all are complete), rmlst loci (if non-plasmid)<br>
+The .tsv output files contain the following columns: accession, topology (circular/linear), length, title, completeness (all are complete), rMLST loci (if non-plasmid)<br>
 Accessions in rmlstrepaccessions.tsv are likely to be chromids. Accessions in rmlstonlyaccessions.tsv may be chromid sequences that don't contain a known plasmid replicon locus; alternatively, they may be chromosomal sequences mis-annotated as plasmids.
 
 
 # Background and methods
 
-For background information on curating plasmids see recent papers ([Orlek _et al._ (2017)](https://www.ncbi.nlm.nih.gov/pubmed/28286183) and [Galata _et al._ (2018)](https://academic.oup.com/nar/article/47/D1/D195/5149885)). A brief outline of the steps of the complete pipeline (including retrieval from NCBI) is given below:
+For background information on curating plasmids see recent papers: [Orlek _et al._ (2017)](https://www.ncbi.nlm.nih.gov/pubmed/28286183) and [Galata _et al._ (2018)](https://academic.oup.com/nar/article/47/D1/D195/5149885). A brief outline of the steps of the complete pipeline (including retrieval from NCBI) is given below:
 
 1. Putative complete plasmid accessions, along with accompanying information such as accession title are downloaded from NCBI nucleotide. To be considered a putative plasmid, the accession must be annotated as "plasmid" and "complete". Only Refseq accessions are retrieved. By default, source organism can be bacteria of any taxon, and accession creation date limits are not set.
 2. The accessions are filtered using a regular expression search of the accession title text. For example, titles including the words "gene", "transposon", or "synthetic vector" would be excluded.
@@ -118,6 +132,10 @@ For background information on curating plasmids see recent papers ([Orlek _et al
 4. The sequences are BLASTed again the PlasmidFinder replicon database and the rMLST database.
 5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file. Accessions with rMLST loci detected are recorded.
 
+
+# Acknowledgements
+
+I am grateful to Dr Keith Jolley informing me about programmatic access to the rMLST database and for pointing me towards [ConFindr](https://olc-bioinformatics.github.io/ConFindr/) software, which implements programmatic access. The `database_setup.py` executable used in CuratePlasmids is based on a script from ConFinder.
 
 
 # License
