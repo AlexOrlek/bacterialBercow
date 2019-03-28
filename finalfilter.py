@@ -61,8 +61,8 @@ f3.close()
 
 #filter all rmlst accessions - these are likely to be either misannotated chromosomal sequences or chromids (see diCenzo 2017; Harrison 2010 papers on chromids)
 
-f2=open('%s/accessions_final.fa'%outdir,'w')
-f3=open('%s/accessions_final.txt'%outdir,'w')
+f2=open('%s/plasmids.fa'%outdir,'w')
+#f3=open('%s/plasmids.txt'%outdir,'w')
 accessions=[]
 with open('%s/accessions_filtered.fa'%outdir) as f:
     for indx, seq_record in enumerate(SeqIO.parse(f,"fasta")):
@@ -72,11 +72,11 @@ with open('%s/accessions_filtered.fa'%outdir) as f:
             continue
         accessions.append(accession)
         SeqIO.write(seq_record, f2, "fasta")
-        f3.write('%s\n'%accession)
+        #f3.write('%s\n'%accession)
 f2.close()
-f3.close()
+#f3.close()
 
-f2=open('%s/accessions_final.tsv'%outdir,'w')
+f2=open('%s/plasmids.tsv'%outdir,'w')
 with open('%s/accessions_filtered.tsv'%outdir) as f:
     for line in f:
         data=line.strip().split('\t')

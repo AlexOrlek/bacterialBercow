@@ -245,14 +245,14 @@ def main():
     #                    help='Path to download databases to - if folder does not exist, will be created. If folder does '
     #                         'exist, will be deleted and updated sequences downloaded. Defaults to ~/.confindr_db, or '
     #                         'the CONFINDR_DB environmental variable.')
-    parser.add_argument('-o', '--output_folder',
-                        default='%s/databases/rmlstalleles'%sourcedir,
-                        help='Path to download databases to - if folder does not exist, will be created. If folder does '
-                             'exist, will be deleted and updated sequences downloaded. Defaults to databases/rmlstalleles')
     parser.add_argument('-s', '--secret_file',
                         type=str,
                         required=True,
                         help='Path to consumer secret file for rMLST database.')
+    parser.add_argument('-o', '--output_folder',
+                        default='%s/databases/rmlstalleles'%sourcedir,
+                        help='Path to download databases to - if folder does not exist, will be created. If folder does '
+                             'exist, will be deleted and updated sequences downloaded. Defaults to databases/rmlstalleles')
     args = parser.parse_args()
     setup_confindr_database(args.output_folder,
                             args.secret_file)
