@@ -34,13 +34,13 @@ parser.add_argument('--rmlstdbpath', help='Path to the directory used to store t
 parser.add_argument('--enterobacdbpath', help='Path to the "enterobacteriaceae" plasmidfinder BLAST database (default: databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb)',required=False)
 parser.add_argument('--gramposdbpath', help='Path to the "gram_positive" plasmidfinder BLAST database (default: databases/plasmidfinder/gram_positive/gram_positivedb)',required=False)
 parser.add_argument('--accessions', help='A text file containing NCBI plasmid accessions in the first column; if provided, these accessions will be retrieved, rather than retrieving plasmid accessions using a query term (default: retrieve accessions using a query term)',required=False)
-parser.add_argument('--fasta', help='A fasta file containing uncharacterised bacterial contigs; if provided, these contigs will be typed using rmlst and replicon loci to determine whether they are likely to be plasmids or chromosomal (default: retrive sequences from NCBI)',required=False)
+parser.add_argument('--sequences', help='A fasta file containing uncharacterised bacterial contig nucleotide sequences; if provided, these contigs will be typed using rmlst and replicon loci to determine whether they are likely to be plasmids or chromosomal (default: retrive sequences from NCBI)',required=False)
 
 args = parser.parse_args()
 outputpath=os.path.relpath(args.out, cwdir)
 
-args=['mkdir -p %s'%outputpath]
-runsubprocess(args,shell=True)
+cmdArgs=['mkdir -p %s'%outputpath]
+runsubprocess(cmdArgs,shell=True)
 
 ###retrive accessions and sequences from NCBI
 if args.sequences==None:
@@ -61,10 +61,10 @@ if args.sequences==None:
 
 
 
-args=['mkdir -p %s/plasmidfinder'%outputpath]
-runsubprocess(args,shell=True)
-args=['mkdir -p %s/rmlst'%outputpath]
-runsubprocess(args,shell=True)
+cmdArgs=['mkdir -p %s/plasmidfinder'%outputpath]
+runsubprocess(cmdArgs,shell=True)
+cmdArgs=['mkdir -p %s/rmlst'%outputpath]
+runsubprocess(cmdArgs,shell=True)
 
 if args.enterobacdbpath==None:
     enterobacteriaceaedbpath='%s/databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb'%sourcedir
