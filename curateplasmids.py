@@ -39,6 +39,9 @@ parser.add_argument('--fasta', help='A fasta file containing uncharacterised bac
 args = parser.parse_args()
 outputpath=os.path.relpath(args.out, cwdir)
 
+args=['mkdir -p %s'%outputpath]
+runsubprocess(args,shell=True)
+
 ###retrive accessions and sequences from NCBI
 if args.sequences==None:
     if args.accessions==None:

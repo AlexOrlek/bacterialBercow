@@ -109,8 +109,10 @@ The below table shows the outputs from running the complete pipeline (including 
 File/Directory               | Description
 ---------------------------- | -------------------------------------------------------------------------------------------------
 accessions.tsv               | putative plasmid accessions, following initial retrieval from NCBI
-accessions_filtered.tsv      | accessions, following filtering based on accession title text
+incompleteaccessions.tsv     | as above but not annotated as complete; these accessions will not be included
+accessions_filtered.tsv      | accessions remaining, following filtering based on accession title text
 accessions_filtered.fa       | sequences of accessions_filtered.tsv
+accessions_excluded.tsv	     | accessions excluded, following filtering based on accession title text
 plasmidfinder                | outputs from BLASTing accessions_filtered.fa against the PlasmidFinder replicon database
 rmlst                        | outputs from BLASTing accessions_filtered.fa against the rMLST database
 plasmids.fa		     | plasmid sequences
@@ -118,7 +120,7 @@ plasmids.tsv		     | plasmid accessions
 rmlstrepaccessions.tsv	     | filtered accessions that have one or more replicon and rmlst loci detected (and are therefore not included in plasmids.fa)
 rmlstonlyaccessions.tsv	     | filtered accessions that have one or more rmlst loci detected (and therefore are not included in plasmids.fa)
 
-The .tsv output files contain the following columns: accession, topology (circular/linear), length, title, completeness (all are complete), rMLST loci (if non-plasmid)<br>
+The .tsv output files contain the following columns: accession, topology (circular/linear), length, title, completeness (all are complete by default), rMLST loci (if non-plasmid)<br>
 Accessions in rmlstrepaccessions.tsv are likely to be chromids. Accessions in rmlstonlyaccessions.tsv may be chromid sequences that don't contain a known plasmid replicon locus; alternatively, they may be chromosomal sequences mis-annotated as plasmids.
 
 
@@ -135,7 +137,7 @@ For background information on curating plasmids see recent papers: [Orlek _et al
 
 # Acknowledgements
 
-I am grateful to Dr Keith Jolley informing me about programmatic access to the rMLST database and for pointing me towards [ConFindr](https://olc-bioinformatics.github.io/ConFindr/) software, which implements programmatic access. The `database_setup.py` executable used in CuratePlasmids is based on a script from ConFinder.
+I am grateful to Dr Keith Jolley informing me about programmatic access to the rMLST database and for pointing me towards [ConFindr](https://olc-bioinformatics.github.io/ConFindr/) software, which implements programmatic access. The `database_setup.py` executable used in CuratePlasmids is based on a script from ConFindr.
 
 
 # License

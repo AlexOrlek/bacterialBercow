@@ -13,13 +13,12 @@ else
     outdir=${3}
 fi
 
-mkdir -p ${outdir}
-
 date=$(date)
 echo ${date} > ${outdir}/downloaddate.txt
 
 #initial retrieval of accessions and titles, which will then be text-mined to decide which genbank files to retrieve
 #no length filters applied at this stage
+
 if [ "$datepresent" == "datepresent" ]; then
   esearch -db nuccore -query "${taxonomyterm} AND ${dateterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${1}/${downloaddate}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
 else
