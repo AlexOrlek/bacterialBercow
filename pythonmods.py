@@ -193,11 +193,11 @@ def blastfilter(blastoutput,finalfile,sortedfile, idtable=False, pidthresh=90,co
     #write best hits to file                                                                                                                                                                                
     fileObj=open(finalfile,'w')
     for indxa, query in enumerate(uniquequerynames):
-        print('{} {}'.format(indxa, 'query indx, blastfilter'))
+        #print('{} {}'.format(indxa, 'query indx, blastfilter'))
         hitrangegenelengths=[] #list of tuples of inlcuded hits and the associated gene lengths                                                                                                             
         for indxb, data in enumerate(querydict[query]): #running through all hits associated with a given query                                                                                             
             if indxb==0:  #for the highest scoring hit, include, irrespecitve of overlaps                                                                                                                   
-                print('{} {} {} {} {}'.format(data, 'data = row of hit info', startindex, endindex, data[0]))
+                #print('{} {} {} {} {}'.format(data, 'data = row of hit info', startindex, endindex, data[0]))
                 ranges=[int(data[startindex]),int(data[endindex])]
                 genelength=int(data[genelenindex])
                 minrange=ranges[ranges.index(min(ranges))]

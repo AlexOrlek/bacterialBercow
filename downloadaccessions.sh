@@ -20,7 +20,7 @@ echo ${date} > ${outdir}/downloaddate.txt
 #no length filters applied at this stage
 
 if [ "$datepresent" == "datepresent" ]; then
-  esearch -db nuccore -query "${taxonomyterm} AND ${dateterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${1}/${downloaddate}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
+  esearch -db nuccore -query "${taxonomyterm} AND ${dateterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
 else
   esearch -db nuccore -query "${taxonomyterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
 fi

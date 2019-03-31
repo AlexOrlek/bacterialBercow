@@ -11,6 +11,7 @@ CuratePlasmids is a command-line tool for identifying bacterial plasmids from th
 * [Background and methods](#Background-and-methods)
 * [Options and usage](#Options-and-usage)
 * [Output files](#Output-files)
+* [FAQ](#faq)
 * [Acknowledgements](#Acknowledgements)
 * [License](#License)
 
@@ -18,11 +19,11 @@ CuratePlasmids is a command-line tool for identifying bacterial plasmids from th
 
 # Introduction
 
-Retrieving plasmid sequences from the NCBI nucleotide database requires quality-filtering to exclude partial plasmid sequences, or chromosomal sequences mis-annotated as plasmids. I previously outlined methods to curate NCBI plasmids [Orlek _et al_. 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183). Following similar methods, CuratePlasmids allows users to retrieve putative plasmid sequences from NCBI and then characterise them by detecting [replicon loci](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and [rMLST loci](https://pubmlst.org/rmlst/), so that plasmid sequences can be distinguished. CuratePlasmids also allows users to characterise their in-house assembled sequences.<br>
+Retrieving plasmid sequences from the NCBI nucleotide database requires quality-filtering to exclude partial plasmid sequences, or chromosomal sequences mis-annotated as plasmids. I previously outlined methods to curate NCBI plasmids ([Orlek _et al_. 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183)). Following similar methods, CuratePlasmids allows users to retrieve putative plasmid sequences from NCBI and then characterise them by detecting [replicon loci](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and [rMLST loci](https://pubmlst.org/rmlst/), so that plasmid sequences can be distinguished. CuratePlasmids also allows users to characterise their in-house assembled sequences.<br>
 
-[PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) is an online database of curated plasmids, updated every ~3 months, so this is the easiest way to get hold of NCBI plasmid sequences. However, CuratePlasmids is useful if you want to:
-* Retrive the most up-to-date set of plasmids.
+[PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) is an online database of curated plasmids, updated every ~3 months, so this is an easy way to get hold of NCBI plasmid sequences. However, there are reasons why you may want to use CuratePlasmids instead (see [FAQ](#faq) for details). Notably, CuratePlasmids is useful if you want to:
 * Characterise in-house sequence data that has not yet been uploaded to NCBI.
+* Retrive the most up-to-date set of plasmids from NCBI.
 * Identify ['chromid'](https://www.ncbi.nlm.nih.gov/pubmed/20080407) sequences.
 * Check the curation process at each step (which sequences are being excluded and why); and use this to fine-tune curation methods if desired. 
 
@@ -61,7 +62,7 @@ efKXmqp2D0EBlMBkZaGC2lPf
 F$M+fQ2AFFB2YBDfF9fpHF^qSWJdmmN%L4Fxf5Gur3
 ```
 
-* Install the database by running the `database_setup.py` executable, providing the `-s` flag with the file containing the secret id and secret:<br>
+* Install the database by running the `database_setup.py` executable (with Python 3 set as your default Python version), providing the `-s` flag with the file containing the secret id and secret:<br>
 
 ```bash
 database_setup.py -s secretfile.txt`
@@ -95,8 +96,11 @@ To curate your own plasmid sequences, provide an input multifasta file:
 
 
 `--enterobacdbpath` and `--gramposdbpath` flags can be provided with paths to your own PlasmidFinder enterobacteriaceae and gram_positive BLAST databases (created by running the `makeblastdb` command on the fasta files using [command line BLAST](https://www.ncbi.nlm.nih.gov/books/NBK279688/))<br>
-The `--taxonomyquery` and `--datequery` flags allow the NCBI query to be customised according to the source organism of the accession and the date the accession was first added to NCBI.
-The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions.
+The `--taxonomyquery` and `--datequery` flags allow the NCBI query to be customised according to the source organism of the accession and the date the accession was first added to NCBI. Note that the taxonomy id associated with given organism can be found through the [NCBI Taxonomy Browser](https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi). For example, the command below would retrieve _Klebsiella aerogenes_ plasmids, added since the start of 2017:<br>
+
+`curateplasmids.py -e first.last@email.com -o output-directory -q '"Klebsiella aerogenes"[porgn:__txid548]' -d '"2017/01/01"[PDAT] : "3000"[PDAT]'`
+
+The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions.<br>
 The `--retrieveaccessionsonly` flag retrives accessions and runs the initial title text-based filtering, but not the more time-consuming BLAST-based filtering (see [Background and methods](#background-and-methods)).<br>
 Therefore, if you wish to update an existing database with more recent accessions, you could run CuratePlasmids with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of CuratePlasmids by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.
 
@@ -133,6 +137,17 @@ For background information on curating plasmids see recent papers: [Orlek _et al
 3. The filtered accession sequences are downloaded as a FASTA file.
 4. The sequences are BLASTed again the PlasmidFinder replicon database and the rMLST database.
 5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file. Accessions with rMLST loci detected are recorded.
+
+# FAQ
+
+* **How does CuratePlasmids differ from previously published plasmid curation methods?**
+I previously published a similar method for plasmid curation (Orlek _et al._ (2017)](https://www.ncbi.nlm.nih.gov/pubmed/28286183), but compared with CuratePlasmids, the methods in the paper differ in several key ways:
+* I used MLST rather than rMLST to filter chromosomal accessions. MLST loci are more limited as a chromosomal marker since MLST schemes cover fewer taxa.
+* I included both Refseq and Genbank accessions, deduplicating identical sequences. In contrast, CuratePlasmids retrieves only Refseq accessions (and does not deduplicate based on sequence identity). Refseq represents a higher quality dataset (e.g. all Refseq accessions undergo the same annotation pipeline). Refseq is already a non-redundant database.
+* Accessions were not required to be annotated as complete in the paper, but for CuratePlasmids, only complete plasmids are included.<br>
+PLSDB follows similar methods to Orlek _et al_ 2017 but uses rMLST. However, unlike CuratePlasmids, accessions with up to 5 rMLST loci are included in PLSDB, whereas an accessions with one or more rMLST loci is not considered a plasmid when using CuratePlasmids - however, such accessions are recorded; they may be misannotated chromosomal sequence or chromids.
+* **Does CuratePlasmids include linear plasmids?**
+Yes, like the other plasmid databases described above, CuratePlasmids includes linear plasmids. However, the linear annotation should be treated cautiously since a 'linear' plasmid could actually be a circular plasmid that just couldn't be circularised after assembly. 
 
 
 # Acknowledgements

@@ -1,4 +1,3 @@
-from mymod import filepath
 import sys, re
 
 outdir=sys.argv[1]
@@ -16,7 +15,7 @@ with open(accessionfile) as f:
         line=line.strip()
         description=line.split('\t')[3]  #!!!need to convert to lower case, or use re.I above
         #print(indx, line)
-        print(description)
+        #print(description)
         regexexclude=regexObjexclude.findall(description) #regexexclude is a list of any regular expression terms which have a match in the accession description
         if len(regexexclude)==0:
             f2.write('%s\n'%line)
