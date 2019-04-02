@@ -7,11 +7,11 @@ rmlstdbpath=sys.argv[1]
 threads=sys.argv[2]
 outdir=sys.argv[3]
 sequenceorigin=sys.argv[4]
-
+sourcedir=sys.argv[5]
 if sequenceorigin=='ncbi':
-    query='%s/accessions_filtered.fa'%outdir
+    query='%s/accessions_filtered_deduplicated.fa'%outdir
 else:
-    query=sys.argv[5]
+    query=sys.argv[6]
     
 with open('%s/rmlstloci.txt'%rmlstdbpath) as f:
     for line in f:
@@ -29,7 +29,7 @@ runsubprocess(args,shell=True)
 blastoutput='%s/rmlst/BLASTtable_combined.tsv'%outdir
 finalfile='%s/rmlst/BLASTtablebesthits.tsv'%outdir
 sortedfile='%s/rmlst/BLASTtablesorted.tsv'%outdir
-mlstfilter(blastoutput, finalfile, sortedfile, pidthresh=95, coveragethresh=0.95, formatcontigcol=False) #this is the threshold use in larsen 2014, and a high coverage threhsold is appropriate for complete (or near complete) genomes !? - should also apply to mlst , resfinder etc.
+mlstfilter(blastoutput, finalfile, sortedfile, sourcedir, pidthresh=95, coveragethresh=0.95, formatcontigcol=False) #this is the threshold use in larsen 2014, and a high coverage threhsold is appropriate for complete (or near complete) genomes !? - should also apply to mlst , resfinder etc.
 print('mlstfilter finished')
 
 

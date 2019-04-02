@@ -8,11 +8,13 @@ batchsize=${1}
 emailaddress=${2}
 outdir=${3}
 
-accessions=($(cut -f 1 "${outdir}/accessions_filtered.tsv"))
+accessions=($(cut -f 1 "${outdir}/accessions_filtered.tsv" | sed '1d')) #first column with header removed
 
 > ${outdir}/accessions_filtered.fa
+echo -e 'Accession\tBioSample\tCreateDate' > ${outdir}/accessions_filtered_metadata.tsv
 
 econtact -email ${emailaddress} -tool plasmiddownload
+
 
 len=${#accessions[@]}
 chunklen=${batchsize}
@@ -28,19 +30,58 @@ do
         chunklen=$(( $chunklen + 1 ))
         chunkedaccessions=${accessions[@]:$i:$chunklen} #slice accessions array
 	chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
+	#echo "$chunkedaccessionsinput"
+	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion BioSample CreateDate >> ${outdir}/accessions_filtered_metadata.tsv
 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format fasta >> ${outdir}/accessions_filtered.fa
 	break
     else
         echo $i
-        chunkedaccessions=${accessions[@]:$i:$chunklen} #slice accessions array                                                                                                                       
-        chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input                                                                    
-        echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format fasta >> ${outdir}/accessions_filtered.fa
+        chunkedaccessions=${accessions[@]:$i:$chunklen} #slice accessions array                                                           
+        chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
+	#echo "$chunkedaccessionsinput"
+	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion BioSample CreateDate >> ${outdir}/accessions_filtered_metadata.tsv
+	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format fasta >> ${outdir}/accessions_filtered.fa
         sleep 1
     fi
 done
 
 echo 'finished sequence download'
 
+
+
+#OLD CODE - BEFORE USING -DEF ARGUMENT
+# for i in $(eval echo {0..$len..$chunklen})
+# do
+#     sum=$(( ($i + $chunklen) + 1 ))
+#     if [ $i -eq $len ]; then
+#         break
+#     elif [ $sum -eq $len ]; then
+#         echo $i
+#         chunklen=$(( $chunklen + 1 ))
+#         chunkedaccessions=${accessions[@]:$i:$chunklen} #slice accessions array
+# 	chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
+# 	#echo "$chunkedaccessionsinput"
+# 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion BioSample | awk -F "\t" '{ if (NF<2) { print $0"\t""not set" } else { print $0 }}' >> ${outdir}/accessions_filtered_biosamples.tsv
+# 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format fasta >> ${outdir}/accessions_filtered.fa
+# 	break
+#     else
+#         echo $i
+#         chunkedaccessions=${accessions[@]:$i:$chunklen} #slice accessions array                                                           
+#         chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
+# 	#echo "$chunkedaccessionsinput"
+# 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion BioSample | awk -F "\t" '{ if (NF<2) { print $0"\t""not set" } else { print $0 }}' >> ${outdir}/accessions_filtered_biosamples.tsv
+# 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format fasta >> ${outdir}/accessions_filtered.fa
+#         sleep 1
+#     fi
+# done
+
+# echo 'finished sequence download'
+
+
+###OLD CODE
+
+#this fails
+#echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | tee >(efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion BioSample | awk -F "\t" '{ if (NF<2) { print $0"\t""not set" } else { print $0 }}' >> ${outdir}/accessions_filtered_biosamples.tsv) | efetch -format fasta >> ${outdir}/accessions_filtered.fa
 
 
 ###OLD CODE - retrieving full gb file

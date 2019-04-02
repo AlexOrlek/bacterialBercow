@@ -4,29 +4,60 @@ set -u
 set -o pipefail
 
 datepresent=${1}
-if [ "$datepresent" == "datepresent" ]; then
-    taxonomyterm=${2}
-    dateterm=${3}
-    outdir=${4}
-else
-    taxonomyterm=${2}
-    outdir=${3}
-fi
+taxonomyterm=${2}
+dateterm=${3} #None if datepresent == absent
+database=${4}
+outdir=${5}
 
 date=$(date)
 echo ${date} > ${outdir}/downloaddate.txt
 
+echo -e 'Accession\tTopology\tLength\tTitle\tCompleteness' > ${outdir}/incompleteaccessions.tsv
+echo -e 'Accession\tTopology\tLength\tTitle\tCompleteness' > ${outdir}/accessions.tsv
+
+
 #initial retrieval of accessions and titles, which will then be text-mined to decide which genbank files to retrieve
 #no length filters applied at this stage
 
-if [ "$datepresent" == "datepresent" ]; then
-  esearch -db nuccore -query "${taxonomyterm} AND ${dateterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
+if [ "$database" == "refseq" ]; then
+  if [ "$datepresent" == "present" ]; then
+    esearch -db nuccore -query "${taxonomyterm} AND ${dateterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion Topology Slen Title Completeness | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' >> ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' >> ${outdir}/accessions.tsv
+  else
+    esearch -db nuccore -query "${taxonomyterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion Topology Slen Title Completeness | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' >> ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' >> ${outdir}/accessions.tsv
+  fi
+elif [ "$database" == "refseq_genbank" ]; then
+  if [ "$datepresent" == "present" ]; then
+    esearch -db nuccore -query "${taxonomyterm} AND ${dateterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion Topology Slen Title Completeness | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' >> ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' >> ${outdir}/accessions.tsv
+ else
+    esearch -db nuccore -query "${taxonomyterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion Topology Slen Title Completeness | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' >> ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' >> ${outdir}/accessions.tsv
+  fi
 else
-  esearch -db nuccore -query "${taxonomyterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
+    echo "database argument not recognised"; exit
+echo "finished downloading accessions"
 fi
 
-echo "finished downloading accessions"
 
+
+
+
+#OLD CODE - BEFORE USING -DEF ARGUMENT AS PLACEHOLDER
+
+# if [ "$database" == "refseq" ]; then
+#   if [ "$datepresent" == "present" ]; then
+#     esearch -db nuccore -query "${taxonomyterm} AND ${dateterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
+#   else
+#     esearch -db nuccore -query "${taxonomyterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efilter -source refseq | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
+#   fi
+# elif [ "$database" == "refseq_genbank" ]; then
+#   if [ "$datepresent" == "present" ]; then
+#     esearch -db nuccore -query "${taxonomyterm} AND ${dateterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
+#  else
+#     esearch -db nuccore -query "${taxonomyterm} AND biomol_genomic[PROP] AND plasmid[filter]" | efetch -format docsum | xtract -pattern DocumentSummary -element AccessionVersion Topology Slen Title Completeness | awk -F "\t" '{ if (NF<5) { print $0"\t""not set" } else { print $0 }}' | sort -k3,3n | tee >(awk -F "\t" '{ if ($5 !~ /complete/) { print $0 }}' > ${outdir}/incompleteaccessions.tsv) | awk -F "\t" '{ if ($5 ~ /complete/) { print $0 }}' > ${outdir}/accessions.tsv
+#   fi
+# else
+#     echo "database argument not recognised"; exit
+# echo "finished downloading accessions"
+# fi
 
 
 

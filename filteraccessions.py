@@ -9,9 +9,13 @@ regexObjexclude=re.compile(r'\bcontig\b|\bscaffold\b|\bgenes?\b|\bintegrons?\b|\
 
 #iterate through accessions, filtering according to regular expression exclusion criteria
 f2=open('%s/accessions_filtered.tsv'%outdir,'w')
-f3=open('%s/accessions_excluded.tsv'%outdir,'w')
+f3=open('%s/excludedaccessions.tsv'%outdir,'w')
+f2.write('Accession\tTopology\tLength\tTitle\tCompleteness\n')
+f3.write('Accession\tTopology\tLength\tTitle\tCompleteness\n')
 with open(accessionfile) as f:
     for indx, line in enumerate(f):
+        if indx==0: #header line
+            continue
         line=line.strip()
         description=line.split('\t')[3]  #!!!need to convert to lower case, or use re.I above
         #print(indx, line)

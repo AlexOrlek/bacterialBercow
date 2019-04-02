@@ -1,5 +1,10 @@
 ################Python modules
 
+def unique(mylist):
+    seen = set()
+    return [x for x in mylist if not (x in seen or seen.add(x))]
+
+
 ###wrapper for the subprocess command
 def runsubprocess(args,stderrpath=None, stdoutpath=None, writefile=None,shell=False,verbose=True):
     import subprocess,sys #os
@@ -142,13 +147,13 @@ def unlist(listed, d=','):
 
 
 ###selecting best blast hits
-def blastfilter(blastoutput,finalfile,sortedfile, idtable=False, pidthresh=90,coveragethresh=0.9,overlapthresh=0.5, longerqueries=True, keepblastoutput=False, keepsortedfile=False):
+def blastfilter(blastoutput,finalfile,sortedfile,sourcedir,idtable=False, pidthresh=90,coveragethresh=0.9,overlapthresh=0.5,longerqueries=True, keepblastoutput=False, keepsortedfile=False):
     """takes a blast output table and filters for best non-overalpping hits; if provided, idtable filepath will be used to rename subject sequence ids post filtering"""
     from pythonmods import runsubprocess, unlist
 
     #use blastfilter.sh to filter and sort blastoutput (outputs sortedfile)                                                                                                                                 
     formatcontigcol=False #hardcoded since this option only applies to mlst filtering                                                                                                                       
-    args=['bash', 'blastfilter.sh','%s'%longerqueries,'%s'%formatcontigcol,'%s'%blastoutput,'%s'%sortedfile,'%s'%pidthresh,'%s'%coveragethresh]
+    args=['bash', '%s/blastfilter.sh'%sourcedir,'%s'%longerqueries,'%s'%formatcontigcol,'%s'%blastoutput,'%s'%sortedfile,'%s'%pidthresh,'%s'%coveragethresh]
     runsubprocess(args)
 
     #make dictionary based on score-sorted file of pid/coverage-filtered output, with query sequences as keys and score-ordered hits as nested list of values                                               
@@ -250,12 +255,12 @@ def blastfilter(blastoutput,finalfile,sortedfile, idtable=False, pidthresh=90,co
 ###selecting best mlst blast hits
 
 #N.B mlstfilter will select only the best allele per locus for each query; so even if there are multiple non-overlapping hits per locus only the best hit will be returned. This simplifies filtering/typing but multiple high-scoring non-overlapping hits could be used as indicator of contamination (on the other hand, perhaps sometimes chromosomes do have multiple rmlst/mlst loci with mosaic phylogenetic origins - so not sure whether multiple hits per locus would be a good marker of contamination except in extreme cases where there are multiple complete chromosomes of different species in a single sample [which would probably be picked up as contaminant anyway]).
-def mlstfilter(blastoutput,finalfile,sortedfile, idtable=False, pidthresh=90,coveragethresh=0.9,overlapthresh=0.5, incF=False, longerqueries=True, formatcontigcol=True, keepblastoutput=False, keepsortedfile=False):
+def mlstfilter(blastoutput,finalfile,sortedfile,sourcedir,idtable=False, pidthresh=90,coveragethresh=0.9,overlapthresh=0.5, incF=False, longerqueries=True, formatcontigcol=True, keepblastoutput=False, keepsortedfile=False):
     """takes a blast output table of mlst alleles and filters for best alleles; similar code to blast filter (differences include: formatcontigcol can be set during filtering); formatcontigcol=True means do filtering on a per-sample basis (hence requiring the contig query column to be prefixed with sample-level column); formatcontigcol=False means do filtering on a per-contig level"""
-    from mymod import runsubprocess, unlist
+    from pythonmods import runsubprocess, unlist
 
     #use blastfilter.sh to filter and sort blastoutput (outputs sortedfile)                                                                                                                                 
-    args=['bash', 'blastfilter.sh','%s'%longerqueries,'%s'%formatcontigcol,'%s'%blastoutput,'%s'%sortedfile,'%s'%pidthresh,'%s'%coveragethresh]
+    args=['bash', '%s/blastfilter.sh'%sourcedir,'%s'%longerqueries,'%s'%formatcontigcol,'%s'%blastoutput,'%s'%sortedfile,'%s'%pidthresh,'%s'%coveragethresh]
     runsubprocess(args)
 
     #if idtable path is set, make oldname:newname iddict so oldname can be reassigned while writing to file                                                                                                 
@@ -326,7 +331,7 @@ def mlstfilter(blastoutput,finalfile,sortedfile, idtable=False, pidthresh=90,cov
 
 def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
     """takes a list of probetypes; outputs inctypes, incfamilies, inclength"""
-    from mymod import unlist
+    from pythonmods import unlist
     import sys
     inclength=str(len(inctype_probes))
     nestinctypes=[] #inc type

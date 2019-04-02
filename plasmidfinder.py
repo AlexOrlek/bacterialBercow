@@ -6,11 +6,11 @@ dbpath=sys.argv[2] #plasmidfinder database path, either enterobacteriaceae or gr
 threads=sys.argv[3]
 outdir=sys.argv[4]
 sequenceorigin=sys.argv[5]
-
+sourcedir=sys.argv[6]
 if sequenceorigin=='ncbi':
-    query='%s/accessions_filtered.fa'%outdir
+    query='%s/accessions_filtered_deduplicated.fa'%outdir
 else:
-    query=sys.argv[6]
+    query=sys.argv[7]
 
 #do blastn of accessions_filtered.fa file against plasmidfinder database
 
@@ -20,6 +20,6 @@ runblastn(query, dbpath, blastoutput, num_threads='%s'%threads) #running with de
 print('runblastn finshed; database: %s'%database)
 finalfile='%s/plasmidfinder/BLASTtablebesthits_%s.tsv'%(outdir,database)
 sortedfile='%s/plasmidfinder/BLASTtablesorted_%s.tsv'%(outdir,database)
-blastfilter(blastoutput, finalfile, sortedfile, pidthresh=80, coveragethresh=0.60)
+blastfilter(blastoutput, finalfile, sortedfile, sourcedir, pidthresh=80, coveragethresh=0.60)
 print('blastfilter finished; database: %s'%database)
 

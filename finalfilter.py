@@ -39,9 +39,13 @@ rmlstonlyaccessions=sorted(list(rmlstaccessions.difference(repaccessions)))
 #write accessions to file along with info from accessions_filtered.tsv
 f2=open('%s/rmlstrepaccessions.tsv'%outdir,'w')
 f3=open('%s/rmlstonlyaccessions.tsv'%outdir,'w')
+f2.write('Accession\tTopology\tLength\tTitle\tCompleteness\trMLST_alleles\n')
+f3.write('Accession\tTopology\tLength\tTitle\tCompleteness\trMLST_alleles\n')
 
 with open('%s/accessions_filtered.tsv'%outdir) as f:
-    for line in f:
+    for indx, line in enumerate(f):
+        if indx==0:
+            continue
         data=line.strip().split('\t')
         accession=data[0]
         if accession in rmlstrepaccessions:
@@ -64,7 +68,7 @@ f3.close()
 f2=open('%s/plasmids.fa'%outdir,'w')
 #f3=open('%s/plasmids.txt'%outdir,'w')
 accessions=[]
-with open('%s/accessions_filtered.fa'%outdir) as f:
+with open('%s/accessions_filtered_deduplicated.fa'%outdir) as f:
     for indx, seq_record in enumerate(SeqIO.parse(f,"fasta")):
         fastaheader=str(seq_record.id)
         accession=fastaheader.split(' ')[0].lstrip('>')
@@ -72,13 +76,15 @@ with open('%s/accessions_filtered.fa'%outdir) as f:
             continue
         accessions.append(accession)
         SeqIO.write(seq_record, f2, "fasta")
-        #f3.write('%s\n'%accession)
 f2.close()
-#f3.close()
+
 
 f2=open('%s/plasmids.tsv'%outdir,'w')
+f2.write('Accession\tTopology\tLength\tTitle\tCompleteness\n')
 with open('%s/accessions_filtered.tsv'%outdir) as f:
-    for line in f:
+    for indx,line in enumerate(f):
+        if indx==0:
+            continue
         data=line.strip().split('\t')
         accession=data[0]
         if accession in accessions:
