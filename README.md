@@ -103,8 +103,9 @@ The `--taxonomyquery` and `--datequery` flags allow the NCBI query to be customi
 The `-s` flag specifies which NCBI source database(s) to include; by default both refseq and genbank databases will be included (`refseq_genbank`) but refseq only can be specified (`refseq`).<br>
 By default, the number of threads is 1, but multi-threading is recommended to reduce computing time (for BLAST searches); the number of threads to use is specified using the `-t` flag; the value must not exceed the number of threads available on your machine.<br>
 The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions.<br>
-The `--retrieveaccessionsonly` flag retrives accessions and runs the initial title text-based filtering, but not the more time-consuming BLAST-based filtering (see [Background and methods](#background-and-methods)).<br>
-Therefore, if you wish to update an existing database with more recent accessions, you could run CuratePlasmids with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of CuratePlasmids by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.
+The `--retrieveaccessionsonly` flag outputs until `accessions_filtered.tsv` (see [Output file](output-files) and [Background and methods](#background-and-methods)).<br>
+The `--retrievesequencesonly` flag outputs until `accessions_filtered_deduplicated.fa`, but does not run the more time-consuming BLAST-based filtering.<br>
+As an example, if you wish to update an existing database with more recent accessions, you could run CuratePlasmids with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of CuratePlasmids by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.
 
 
 
@@ -113,21 +114,22 @@ Therefore, if you wish to update an existing database with more recent accession
 The below table shows the outputs from running the complete pipeline (including retrieval of accessions from NCBI) with default settings.
 
 File/Directory               	    | Description
------------------------------------ | -------------------------------------------------------------------------------------------------
+----------------------------------- | --------------------------------------------------------------------------------------------- 
+downloaddate.txt		    | a record of when the accessions were retrieved
 accessions.tsv			    | putative plasmid accessions retrieved from NCBI
 incompleteaccessions.tsv       	    | as above but not annotated as complete; these accessions are excluded
 accessions_filtered.tsv        	    | accessions remaining, after filtering based on accession title text
-excludedaccessions.tsv	     	    | accessions excluded, after filtering based on accession title text
-accessions_filtered_metadata.tsv    | metadata (biosample,creation date) associated with accessions_filtered.tsv
-duplicateaccessions.tsv		    | accessions excluded, after removal of duplicate sequences with shared metadata
-accessions_filtered.fa              | sequences of accessions_filtered.tsv
-accessions_filtered_deduplicated.fa | sequences remaining after removal of duplicate sequences with shared metadata
+excludedaccessions.tsv	     	    | accessions excluded, after filtering based on accession title text  
+accessions_filtered_metadata.tsv    | metadata (biosample,creation date) associated with accessions_filtered.tsv  
+duplicateaccessions.tsv		    | accessions excluded, after removal of duplicate sequences with shared metadata 
+accessions_filtered.fa              | sequences of accessions_filtered.tsv		    
+accessions_filtered_deduplicated.fa | sequences remaining after removal of duplicate sequences with shared metadata  
 plasmidfinder/                	    | directory containing outputs from BLASTing remaining sequences against plasmid replicon loci
 rmlst/                        	    | directory containing output from BLASTing remaining sequences against chromosomal rMLST loci
-plasmids.fa		     	    | plasmid sequences
+plasmids.fa		     	    | plasmid sequences  
 plasmids.tsv		     	    | plasmid accessions
 rmlstrepaccessions.tsv	     	    | accessions that have one or more replicon / rmlst loci detected (excluded from plasmids.fa)
-rmlstonlyaccessions.tsv	     	    | accessions that have one or more rmlst loci (excluded from plasmids.fa)
+rmlstonlyaccessions.tsv	     	    | accessions that have one or more rmlst loci (excluded from plasmids.fa)  
 
 Accessions in rmlstrepaccessions.tsv are likely to be chromids. Accessions in rmlstonlyaccessions.tsv may be chromid sequences that don't contain a known plasmid replicon locus; alternatively, they may be chromosomal sequences mis-annotated as plasmids.
 
@@ -145,11 +147,12 @@ For background information on curating plasmids see recent papers: [Orlek _et al
 # FAQ
 
 * **How does CuratePlasmids differ from previously published plasmid curation methods?**
-I previously published a similar method for plasmid curation [Orlek _et al._ (2017)](https://www.ncbi.nlm.nih.gov/pubmed/28286183), but compared with CuratePlasmids, the methods in the paper differ in several key ways:
+I previously published a similar method for plasmid curation ([Orlek _et al._ 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183)), but compared with CuratePlasmids, the methods in the paper differ in several key ways:
     * I used MLST rather than rMLST to filter chromosomal accessions. MLST loci are more limited as a chromosomal marker since MLST schemes cover fewer taxa.
-    * Accessions were not required to be annotated as complete in the paper, but CuratePlasmids selects only complete plasmids.<br>
+    * I used a less stringent and more convoluted approach to decide whether a plasmid sequence was compete: accessions were not required to be annotated as "complete" as long as the title text indicated a "complete" sequence; CuratePlasmids instead excludes any accession that is not annotated as "complete", but does not require explicit mention of completeness in the title text.<br>
+
 [Galata _et al._ (2018)](https://academic.oup.com/nar/article/47/D1/D195/5149885) created [PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) using methods similar to those of the CuratePlasmids pipeline. However, methods of Galata _et al._ differ somewhat; notably:
-    * Although rMLST loci are used to filter chromosomal sequences, in contrast to methods of CuratePlasmids, sequences with up to 5 rMLST loci are included in the database. However, according to a recent review article ([di Cenzo & Finan (2017)](https://mmbr.asm.org/content/81/3/e00019-17)), a plasmid-like sequence encoding one or more ribosomal loci should actually be considered to be a "chromid" and such chromids are biologically distinct from plasmids ([Harrison _et al._ (2010)](https://www.ncbi.nlm.nih.gov/pubmed/20080407)). CuratePlasmids makes a distinction between plasmids and chromids whereas PLSDB does not. 
+    * Although rMLST loci are used to filter chromosomal sequences, in contrast to methods of CuratePlasmids, sequences with up to 5 rMLST loci are included in the database. However, according to a recent review article ([di Cenzo & Finan 2017](https://mmbr.asm.org/content/81/3/e00019-17)), a plasmid-like sequence encoding one or more ribosomal loci should actually be considered a "chromid", which is biologically distinct from a plasmid ([Harrison _et al._ 2010](https://www.ncbi.nlm.nih.gov/pubmed/20080407)). CuratePlasmids makes a distinction between plasmids and chromids whereas PLSDB does not. 
 * **Are there any caveats I should be aware of when using CuratePlasmids?**
 CuratePlasmids relies on NCBI annotation for plasmid topology information (circular / linear). Ideally, a plasmid annotated as 'complete' and 'linear' should be a genuine linear plasmid, but the topology annotation should probably be treated cautiously; a 'linear' plasmid could represent a circular plasmid that failed to circularise after assembly.
 
