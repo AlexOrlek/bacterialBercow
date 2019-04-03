@@ -31,7 +31,7 @@ parser.add_argument('-e','--emailaddress', help="User's email address which will
 parser.add_argument('-s','--dbsource', help='Database source; refseq or refseq_genbank (default: refseq_genbank)', default="refseq_genbank", choices=["refseq","refseq_genbank"],type=str)
 parser.add_argument('-t','--threads', help='Number of threads to use (default: 1)', default=1, type=positiveint)
 parser.add_argument('-o','--out', help='Output directory (required)', required=True, type=str)
-parser.add_argument('--rmlstdbpath', help='Path to the directory used to store the rmlst database (default: databases/rmlstalleles)',required=False)
+parser.add_argument('--rmlstdbpath', help='Path to the directory used to store the rmlst database (default: databases/rmlstalleles/blastdbs)',required=False)
 parser.add_argument('--enterobacdbpath', help='Path to the "enterobacteriaceae" plasmidfinder BLAST database (default: databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb)',required=False)
 parser.add_argument('--gramposdbpath', help='Path to the "gram_positive" plasmidfinder BLAST database (default: databases/plasmidfinder/gram_positive/gram_positivedb)',required=False)
 parser.add_argument('--accessions', help='A text file containing NCBI plasmid accessions in the first column; if provided, these accessions will be retrieved, rather than retrieving plasmid accessions using a query term (default: retrieve accessions using a query term)',required=False)
@@ -91,7 +91,7 @@ else:
       
 
 if args.rmlstdbpath==None:
-    rmlstdbpath='%s/databases/rmlstalleles'%sourcedir
+    rmlstdbpath='%s/databases/rmlstalleles/blastdbs'%sourcedir
 else:
     rmlstdbpath=str(args.rmlstdbpath)
 

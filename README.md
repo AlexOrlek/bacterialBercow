@@ -113,23 +113,24 @@ As an example, if you wish to update an existing database with more recent acces
 
 The below table shows the outputs from running the complete pipeline (including retrieval of accessions from NCBI) with default settings.
 
-File/Directory               	    | Description
------------------------------------ | --------------------------------------------------------------------------------------------- 
-downloaddate.txt		    | a record of when the accessions were retrieved
-accessions.tsv			    | putative plasmid accessions retrieved from NCBI
-incompleteaccessions.tsv       	    | as above but not annotated as complete; these accessions are excluded
-accessions_filtered.tsv        	    | accessions remaining, after filtering based on accession title text
-excludedaccessions.tsv	     	    | accessions excluded, after filtering based on accession title text  
-accessions_filtered_metadata.tsv    | metadata (biosample,creation date) associated with accessions_filtered.tsv  
-duplicateaccessions.tsv		    | accessions excluded, after removal of duplicate sequences with shared metadata 
-accessions_filtered.fa              | sequences of accessions_filtered.tsv		    
-accessions_filtered_deduplicated.fa | sequences remaining after removal of duplicate sequences with shared metadata  
-plasmidfinder/                	    | directory containing outputs from BLASTing remaining sequences against plasmid replicon loci
-rmlst/                        	    | directory containing output from BLASTing remaining sequences against chromosomal rMLST loci
-plasmids.fa		     	    | plasmid sequences  
-plasmids.tsv		     	    | plasmid accessions
-rmlstrepaccessions.tsv	     	    | accessions that have one or more replicon / rmlst loci detected (excluded from plasmids.fa)
-rmlstonlyaccessions.tsv	     	    | accessions that have one or more rmlst loci (excluded from plasmids.fa)  
+File/Directory               	       	  | Description
+----------------------------------------- | --------------------------------------------------------------------------------------------- 
+downloaddate.txt		    	  | a record of when the accessions were retrieved
+accessions.tsv			    	  | putative plasmid accessions retrieved from NCBI
+incompleteaccessions.tsv       	    	  | as above but not annotated as complete; these accessions are excluded
+accessions_filtered.tsv        	    	  | accessions remaining, after filtering based on accession title text
+excludedaccessions.tsv	     	    	  | accessions excluded, after filtering based on accession title text  
+accessions_filtered_biosamples.tsv  	  | biosample accessions associated with accessions_filtered.tsv  
+accessions_filtered_biosamplemetadata.tsv | biosample metadata (submitter name) associated with biosample accessions  
+duplicateaccessions.tsv		    	  | accessions excluded, after removal of duplicate sequences with shared metadata 
+accessions_filtered.fa              	  | sequences of accessions_filtered.tsv		    
+accessions_filtered_deduplicated.fa 	  | sequences remaining after removal of duplicate sequences with shared metadata  
+plasmidfinder/                	    	  | directory containing outputs from BLASTing remaining sequences against plasmid replicon loci
+rmlst/                        	    	  | directory containing output from BLASTing remaining sequences against chromosomal rMLST loci
+plasmids.fa		     	    	  | plasmid sequences  
+plasmids.tsv		     	    	  | plasmid accessions
+rmlstrepaccessions.tsv	     	    	  | accessions that have one or more replicon / rmlst loci detected (excluded from plasmids.fa)
+rmlstonlyaccessions.tsv	     	    	  | accessions that have one or more rmlst loci (excluded from plasmids.fa)  
 
 Accessions in rmlstrepaccessions.tsv are likely to be chromids. Accessions in rmlstonlyaccessions.tsv may be chromid sequences that don't contain a known plasmid replicon locus; alternatively, they may be chromosomal sequences mis-annotated as plasmids.
 
@@ -140,7 +141,7 @@ For background information on curating plasmids see recent papers: [Orlek _et al
 
 1. Putative complete plasmid accessions, along with accompanying information such as accession title are downloaded from NCBI nucleotide. To be considered a putative plasmid, the accession must be annotated as "plasmid" and "complete".
 2. The accessions are filtered using a regular expression search of the accession title text. For example, titles including the words "gene", "transposon", or "synthetic vector" would be excluded.
-3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates; therefore, deduplication is conducted: accessions with identical sequences and shared metadata (same biosample accession id and/or accession creation date) are deduplicated. When selecting a single accession from duplicates, Refseq accessions are favoured over Genbank accessions. 
+3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates; therefore, deduplication is conducted: accessions with identical sequences and shared metadata (same biosample accession id and/or submitter name) are deduplicated. When selecting a single accession from duplicates, Refseq accessions are favoured over Genbank accessions. 
 4. The remaining sequences are BLASTed again the PlasmidFinder replicon database and the rMLST database.
 5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file. Accessions with rMLST loci detected are recorded.
 

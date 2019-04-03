@@ -12,11 +12,14 @@ if sequenceorigin=='ncbi':
     query='%s/accessions_filtered_deduplicated.fa'%outdir
 else:
     query=sys.argv[6]
+
+cmdArgs='find %s'%rmlstdbpath+' '+'-maxdepth 1 -mindepth 1 -name "*.n??" -printf "%f\n" | rev | cut -d"." -f2- | rev | sort | uniq >'+' '+'%s/rmlstloci.txt'%rmlstdbpath
+runsubprocess([cmdArgs],shell=True)
     
 with open('%s/rmlstloci.txt'%rmlstdbpath) as f:
     for line in f:
         locus=line.strip()
-        database='%s/blastdbs/%sdb'%(rmlstdbpath,locus)
+        database='%s/%s'%(rmlstdbpath,locus)
         blastoutput='%s/rmlst/BLASTtable_%s.tsv' %(outdir,locus)
         runblastn(query, database, blastoutput, num_threads='%s'%threads, max_hsps='1', perc_identity='95', evalue='1e-10') #running with default evalue and word size;since running on per-locus blasts, could be more stringent with max_target_seqs, possibly just set to 1   
         print('runblastn finshed for locus %s'%locus)

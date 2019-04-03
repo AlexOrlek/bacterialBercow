@@ -17,22 +17,43 @@ outdir=sys.argv[1]
 
 
 #get accession info from accessions_filtereed_biosample.tsv
+biosamplenamedict={} #biosample accession : name of submittor
+with open('%s/accessions_filtered_biosamplemetadata.tsv'%outdir) as f:
+    for indx, line in enumerate(f):
+        if indx==0:
+            continue
+        data=line.strip().split('\t')
+        biosampleaccession=data[0]
+        firstname=data[1]
+        lastname=data[2]
+        name=firstname+' '+lastname
+        if firstname=='-' and lastname=='-':
+            name='-'
+        biosamplenamedict[biosampleaccession]=name
 
-metadatadict={}
-with open('%s/accessions_filtered_metadata.tsv'%outdir) as f:
+
+metadatadict={} #accession : [biosample accession, name]
+with open('%s/accessions_filtered_biosamples.tsv'%outdir) as f:
     for indx, line in enumerate(f):
         if indx==0:
             continue
         data=line.strip().split('\t')
         accession=data[0]
         biosample=data[1]
-        date=data[2]
-        metadatadict[accession]=[biosample,date]
+        if biosample in metadatadict:
+            name=metaddatadict[biosample]
+        else:
+            name='-'
+        metadatadict[accession]=[biosample,name]
+
+        
 
 ###testing - the following changes mean duplicate sequences are written to file for acessions LR134277.1 and NZ_LR134277.1
-#metadatadict["NC_001735.4"][1]='2016/09/29'
 #metadatadict["LR134277.1"][0]='testSAMN'
-#metadatadict["LR134277.1"][1]='2019/12/19'
+#metadatadict["NC_001735.4"][1]='alexorlekedit'
+#metadatadict["U67194.4"][1]='alexedit'
+#metadatadict["NC_001735.4"][0]='SAMNedit'
+#metadatadict["U67194.4"][0]='SAMNedit2'
 ###
 
 #determine identical by using sequence as dictionary key; then select single deduplicated accessions to write to file based on accession type (refseq/genbank) and biosample
@@ -47,43 +68,68 @@ for indx, seq_record in enumerate(SeqIO.parse(fileObj,"fasta")):
     else:
         accessiontype='genbank'
     sequence=str(seq_record.seq)
-    biosample,date=metadatadict[accession]
+    biosample,name=metadatadict[accession]
     if sequence in plasmiddict:
-        plasmiddict[sequence].append([accession,accessiontype,biosample,date])
+        plasmiddict[sequence].append([accession,accessiontype,biosample,name])
     else:
         plasmiddict[sequence]=[]
-        plasmiddict[sequence].append([accession,accessiontype,biosample,date])
+        plasmiddict[sequence].append([accession,accessiontype,biosample,name])
 
-        
+
+
+
+
+
 #write to file
 f2=open('%s/accessions_filtered_deduplicated.fa'%outdir,'w')
 f3=open('%s/duplicateaccessions.tsv'%outdir,'w')
-f3.write('Accessions\tUnique_Biosamples\tUnique_Dates\tNum_Accessions\tIs_Biosample_Same\n')
+f3.write('Accessions\tBiosamples\tNames\tUnique_Biosamples\tUnique_Names\tNum_Accessions\tNum_Unique_Biosamples\tNum_Unique_Names\tIs_Same_Submission\n')
 for seq, values in plasmiddict.iteritems():
     if len(values)>1: #multiple accessions for a given sequence
         accessions=map(operator.itemgetter(0), values)
         accessiontypes=map(operator.itemgetter(1), values)
         biosamples=map(operator.itemgetter(2), values)
-        dates=map(operator.itemgetter(3), values)
-        #group accessions by metadata - if they have either the same biosample accession or the same date, they are assigned the same group
+        names=map(operator.itemgetter(3), values)
+        #group accessions by metadata - if they have either the same biosample accession or the same name (ignoring missing info), they are assigned the same group
+        #problem: may have different biosample and name not provided - this would lead to different group but maybe should be more leniant and require both to be different? Yes - name / lab group info is the right idea - just need to make sure it's there (lab group would be better?)
+        #reason for both requiring to be different: could have same lab group but copy pasting sequence with different biosample names; could have same biosample being sequenced / used by different lab groups.
         biosamplelist=[]
-        datelist=[]
+        namelist=[]
         groups=[]
-        for biosample,date in zip(biosamples,dates):
-            if biosample not in biosamplelist:
+        for biosample,name in zip(biosamples,names):
+            if biosample not in biosamplelist and biosample!='-':
                 biosamplelist.append(biosample)
-            if date not in datelist:
-                datelist.append(date)
-            biosampleindx=[indx for indx,b in enumerate(biosamplelist) if b==biosample]
-            dateindx=[indx for indx,d in enumerate(datelist) if d==date]
-            groupindx=min(biosampleindx,dateindx)[0]
-            groups.append(groupindx)
+            if name not in namelist and name!='-':
+                namelist.append(name)
+            if biosample=='-':
+                biosampleindx='NA'
+            else:
+                biosampleindx=[indx for indx,b in enumerate(biosamplelist) if b==biosample][0]
+            if name=='-':
+                nameindx='NA'
+            else:
+                nameindx=[indx for indx,n in enumerate(namelist) if n==name][0]
+            #print biosampleindx,nameindx
+            indices=[]
+            if biosampleindx!='NA':
+                indices.append(biosampleindx)
+            if nameindx!='NA':
+                indices.append(nameindx)
+            if len(indices)==2: #i.e. both fields present
+                group=min(indices)
+            else:
+                group=0
+            groups.append(group)
         groupsset=set(groups)
-        #print groupsset, biosamples,dates,len(groupsset)
+        #print groupsset, biosamples,names,len(groupsset)
+        biosamplesunique=unique(biosamples)
+        namesunique=unique(names)
+        biosamplesnonmissing=[i for i in biosamplesunique if i!='-']
+        namesnonmissing=[i for i in namesunique if i!='-']
         if len(groupsset)>1:
-            f3.write('%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(unique(biosamples)),','.join(unique(dates)),len(accessions),'different biosample or date'))
+            f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(biosamples),','.join(names),','.join(biosamplesunique),','.join(namesunique),len(accessions),len(biosamplesnonmissing),len(namesnonmissing),'different biosample and name'))
         else:
-            f3.write('%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(unique(biosamples)),','.join(unique(dates)),len(accessions),'same biosample or date'))
+            f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(biosamples),','.join(names),','.join(biosamplesunique),','.join(namesunique),len(accessions),len(biosamplesnonmissing),len(namesnonmissing),'same biosample or name'))
         for group in groupsset:
             indices=[indx for indx,g in enumerate(groups) if g==group] #get all indices that equal group
             if len(indices)>1: #multiple accessions for a given metadata group - deduplicate by selecting refseq if available
@@ -103,6 +149,66 @@ for seq, values in plasmiddict.iteritems():
 
 f2.close()
 f3.close()
+
+
+#OLD CODE - USING BIOSAMPLE AND CREATEDATE, AND TREATING "-" AS A DISTINCT BIOSAMPLE        
+
+
+###testing - the following changes mean duplicate sequences are written to file for acessions LR134277.1 and NZ_LR134277.1
+#metadatadict["NC_001735.4"][1]='2016/09/29'
+#metadatadict["LR134277.1"][0]='testSAMN'
+#metadatadict["LR134277.1"][1]='2019/12/19'
+###
+
+
+#write to file
+# f2=open('%s/accessions_filtered_deduplicated.fa'%outdir,'w')
+# f3=open('%s/duplicateaccessions.tsv'%outdir,'w')
+# f3.write('Accessions\tUnique_Biosamples\tUnique_Dates\tNum_Accessions\tIs_Biosample_Same\n')
+# for seq, values in plasmiddict.iteritems():
+#     if len(values)>1: #multiple accessions for a given sequence
+#         accessions=map(operator.itemgetter(0), values)
+#         accessiontypes=map(operator.itemgetter(1), values)
+#         biosamples=map(operator.itemgetter(2), values)
+#         dates=map(operator.itemgetter(3), values)
+#         #group accessions by metadata - if they have either the same biosample accession or the same date, they are assigned the same group
+#         biosamplelist=[]
+#         datelist=[]
+#         groups=[]
+#         for biosample,date in zip(biosamples,dates):
+#             if biosample not in biosamplelist:
+#                 biosamplelist.append(biosample)
+#             if date not in datelist:
+#                 datelist.append(date)
+#             biosampleindx=[indx for indx,b in enumerate(biosamplelist) if b==biosample]
+#             dateindx=[indx for indx,d in enumerate(datelist) if d==date]
+#             groupindx=min(biosampleindx,dateindx)[0]
+#             groups.append(groupindx)
+#         groupsset=set(groups)
+#         #print groupsset, biosamples,dates,len(groupsset)
+#         if len(groupsset)>1:
+#             f3.write('%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(unique(biosamples)),','.join(unique(dates)),len(accessions),'different biosample or date'))
+#         else:
+#             f3.write('%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(unique(biosamples)),','.join(unique(dates)),len(accessions),'same biosample or date'))
+#         for group in groupsset:
+#             indices=[indx for indx,g in enumerate(groups) if g==group] #get all indices that equal group
+#             if len(indices)>1: #multiple accessions for a given metadata group - deduplicate by selecting refseq if available
+#                 myrefseqindices=[indx for indx,t in enumerate(accessiontypes) if indx in indices and t=='refseq']
+#                 if len(myrefseqindices)>0: #if there's at least 1 refseq, select the first refseq accession
+#                     accession=accessions[myrefseqindices[0]]
+#                 else: #if there's only genbank, select the first genbank
+#                     accession=accessions[indices[0]]
+#             else: #1 accession for a given metadata group; select accession
+#                 accession=accessions[indices[0]]
+#             f2.write('>%s\n'%accession)
+#             f2.write('%s\n'%seq)
+#     else: #1 accession for a given sequence
+#         accession=values[0][0]
+#         f2.write('>%s\n'%accession)
+#         f2.write('%s\n'%seq)
+
+# f2.close()
+# f3.close()
 
 
 
