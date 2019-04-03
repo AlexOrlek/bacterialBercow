@@ -18,7 +18,7 @@ outdir=sys.argv[1]
 
 #get accession info from accessions_filtereed_biosample.tsv
 biosamplenamedict={} #biosample accession : name of submittor
-with open('%s/accessions_filtered_biosamplemetadata.tsv'%outdir) as f:
+with open('%s/accessions_filtered_metadata.tsv'%outdir) as f:
     for indx, line in enumerate(f):
         if indx==0:
             continue
