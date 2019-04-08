@@ -222,10 +222,10 @@ def setup_confindr_database(output_folder, consumer_secret):
     #             logging.warning('WARNING: Could not delete {}. This won\'t affect ConFindr performance, but '
     #                             ' you may want to delete it to save on disk space.'.format(locus_file))
 
-    logging.info('Assigning alleles to genera...')
+    #logging.info('Assigning alleles to genera...')
     # Parse profiles so that we know what alleles are found with each genus.
-    create_gene_allele_file(profiles_file=os.path.join(output_folder, 'profiles.txt'),
-                            gene_allele_file=os.path.join(output_folder, 'gene_allele.txt'))
+    #create_gene_allele_file(profiles_file=os.path.join(output_folder, 'profiles.txt'),
+    #                        gene_allele_file=os.path.join(output_folder, 'gene_allele.txt'))
 
     logging.info('Make blast databases...')
     # For each locus fasta file create a blast database (save in blastdb sub-folder).

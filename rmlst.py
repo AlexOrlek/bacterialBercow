@@ -21,8 +21,9 @@ with open('%s/rmlstloci.txt'%rmlstdbpath) as f:
         locus=line.strip()
         database='%s/%s'%(rmlstdbpath,locus)
         blastoutput='%s/rmlst/BLASTtable_%s.tsv' %(outdir,locus)
-        runblastn(query, database, blastoutput, num_threads='%s'%threads, max_hsps='1', perc_identity='95', evalue='1e-10') #running with default evalue and word size;since running on per-locus blasts, could be more stringent with max_target_seqs, possibly just set to 1   
+        runblastn(query, database, blastoutput, num_threads='%s'%threads, max_hsps='1', perc_identity='95', evalue='1e-10',word_size='28') #since running per-locus blasts, can be stringent with max_hsps***; also using stingent pid, e-value and word size
         print('runblastn finshed for locus %s'%locus)
+#***"Maximum number of HSPs (alignments) to keep for any single query-subject pair. The HSPs shown will be the best as judged by expect value. This number should be an integer that is one or greater. If this option is not set, BLAST shows all HSPs meeting the expect value criteria. Setting it to one will show only the best HSP for every query-subject pair"
 
 #combining per-locus outputs prior to filtering
 args=['find %s/rmlst/ -maxdepth 1 -mindepth 1 -type f -name "BLASTtable_*.tsv" ! -name "BLASTtable_combined*.tsv" -exec cat {} \; > %s/rmlst/BLASTtable_combined.tsv'%(outdir,outdir)]
@@ -32,7 +33,7 @@ runsubprocess(args,shell=True)
 blastoutput='%s/rmlst/BLASTtable_combined.tsv'%outdir
 finalfile='%s/rmlst/BLASTtablebesthits.tsv'%outdir
 sortedfile='%s/rmlst/BLASTtablesorted.tsv'%outdir
-mlstfilter(blastoutput, finalfile, sortedfile, sourcedir, pidthresh=95, coveragethresh=0.95, formatcontigcol=False) #this is the threshold use in larsen 2014, and a high coverage threhsold is appropriate for complete (or near complete) genomes !? - should also apply to mlst , resfinder etc.
+mlstfilter(blastoutput, finalfile, sortedfile, sourcedir, pidthresh=95, coveragethresh=0.95, formatcontigcol=False) #95% coverage/pid are the thresholds used by Larsen et al. 2014 "Benchmarking methods for genomic taxonomy"; and a high coverage threhsold is appropriate for complete (or near complete) genomes
 print('mlstfilter finished')
 
 

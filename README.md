@@ -34,6 +34,7 @@ Retrieving complete plasmid sequences from the NCBI nucleotide database requires
 * Linux or MacOS (with the [Bash shell](https://en.wikibooks.org/wiki/Bash_Shell_Scripting#What_is_Bash?), which is the default shell on MacOS and many Linux distributions)
 * [Python](https://www.python.org/) 3 is required for the `database_setup.py` executable (tested using Python 3.5); the `curate_plasmids.py` executable works with Python 2 (tested with Python 2.7) or Python 3
 * [edirect](https://www.ncbi.nlm.nih.gov/books/NBK179288/)
+* [bioawk](https://github.com/lh3/bioawk)
 * The [rMLST database](https://pubmlst.org/rmlst/) (follow installation instructions below)
 
 Note, the [PlasmidFinder](https://bitbucket.org/genomicepidemiology/plasmidfinder_db) database for replicon typing is included in the repository (retrieved 23-Apr-2018). Both "enterobacteriaceae" and "gram_positive" components of the database are included. You can use a more recent version of PlasmidFinder if you wish (see [Options and usage](#Options-and-usage)).
@@ -43,10 +44,10 @@ Note, the [PlasmidFinder](https://bitbucket.org/genomicepidemiology/plasmidfinde
 First install the repository:<br>
 
 ```bash
-git clone https://github.com/AlexOrlek/ATCG.git
-cd ATCG
+git clone https://github.com/AlexOrlek/CuratePlasmids.git
+cd CuratePlasmids
 ```
-You should find the executable scripts (`curateplasmids.py` and `database_setup.py`) within the repository directory. If you add the path of this directory to your [$PATH variable](https://www.computerhope.com/issues/ch001647.htm), then ATCG can be run by calling the executable scripts e.g. `curateplasmids.py [`*`arguments...`*`]` from any directory location.
+You should find the executable scripts (`curateplasmids.py` and `database_setup.py`) within the repository directory. If you add the path of this directory to your [$PATH variable](https://www.computerhope.com/issues/ch001647.htm), then CuratePlasmids can be run by calling the executable scripts e.g. `curateplasmids.py [`*`arguments...`*`]` from any directory location.
 
 __Installing the rMLST database__:
 
@@ -86,7 +87,7 @@ To retrieve and curate a custom set of NCBI accessions:
 
 To curate your own plasmid sequences, provide an input multifasta file:
 
-`curateplasmids.py --fasta samples.fasta -o output-directory`
+`curateplasmids.py --sequences samples.fasta -o output-directory`
 
 
 
@@ -105,8 +106,8 @@ By default, the number of threads is 1, but multi-threading is recommended to re
 The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions.<br>
 The `--retrieveaccessionsonly` flag outputs until `accessions_filtered.tsv` (see [Output file](output-files) and [Background and methods](#background-and-methods)).<br>
 The `--retrievesequencesonly` flag outputs until `accessions_filtered_deduplicated.fa`, but does not run the more time-consuming BLAST-based filtering.<br>
-As an example, if you wish to update an existing database with more recent accessions, you could run CuratePlasmids with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of CuratePlasmids by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.
-
+As an example, if you wish to update an existing database with more recent accessions, you could run CuratePlasmids with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of CuratePlasmids by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.<br>
+The `--sequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and rMLST typing. 
 
 
 # Output files
@@ -121,16 +122,24 @@ incompleteaccessions.tsv       	    | as above but not annotated as complete; th
 accessions_filtered.tsv        	    | accessions remaining, after filtering based on accession title text
 excludedaccessions.tsv	     	    | accessions excluded, after filtering based on accession title text  
 accessions_filtered_biosamples.tsv  | biosample accessions associated with accessions_filtered.tsv  
-accessions_filtered_metadata.tsv    | biosample metadata (submitter name) associated with biosample accessions  
+accessions_filtered_metadata.tsv    | biosample metadata (submitter name and owner name) associated with biosample accessions  
 duplicateaccessions.tsv		    | accessions excluded, after removal of duplicate sequences with shared metadata 
 accessions_filtered.fa              | sequences of accessions_filtered.tsv		    
 accessions_filtered_deduplicated.fa | sequences remaining after removal of duplicate sequences with shared metadata  
 plasmidfinder/                	    | directory containing outputs from BLASTing remaining sequences against plasmid replicon loci
 rmlst/                        	    | directory containing output from BLASTing remaining sequences against chromosomal rMLST loci
 plasmids.fa		     	    | plasmid sequences  
-plasmids.tsv		     	    | plasmid accessions
-rmlstrepaccessions.tsv	     	    | accessions that have one or more replicon / rmlst loci detected (excluded from plasmids.fa)
-rmlstonlyaccessions.tsv	     	    | accessions that have one or more rmlst loci (excluded from plasmids.fa)  
+plasmids.tsv		     	    | information on plasmid sequences including replicon typing
+nonplasmids.tsv			    | information on non-plasmid sequences including replicon typing and rMLST typing
+
+The below table shows outputs from running the pipeline with the `--sequences` flag provided.
+
+File/Directory            	    | Description
+----------------------------------- | --------------------------------------------------------------------------------------------- 
+plasmidfinder/                	    | directory containing outputs from BLASTing sequences against plasmid replicon loci
+rmlst/                        	    | directory containing output from BLASTing sequences against chromosomal rMLST loci
+seqlengths.tsv			    | sequence names (from FASTA headers) and corresponding sequence lengths
+typing.tsv			    | information on sequences including replicon typing and rMLST typing
 
 Accessions in rmlstrepaccessions.tsv are likely to be chromids. Accessions in rmlstonlyaccessions.tsv may be chromid sequences that don't contain a known plasmid replicon locus; alternatively, they may be chromosomal sequences mis-annotated as plasmids.
 
@@ -141,7 +150,7 @@ For background information on curating plasmids see recent papers: [Orlek _et al
 
 1. Putative complete plasmid accessions, along with accompanying information such as accession title are downloaded from NCBI nucleotide. To be considered a putative plasmid, the accession must be annotated as "plasmid" and "complete".
 2. The accessions are filtered using a regular expression search of the accession title text. For example, titles including the words "gene", "transposon", or "synthetic vector" would be excluded.
-3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates; therefore, deduplication is conducted: accessions with identical sequences and shared metadata (same biosample accession id and/or submitter name) are deduplicated. When selecting a single accession from duplicates, Refseq accessions are favoured over Genbank accessions. 
+3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates; therefore, deduplication is conducted: accessions with identical sequences and shared metadata (same biosample accession id or submitter name or owner name) are deduplicated. When selecting a single accession from duplicates, Refseq accessions are favoured over Genbank accessions. 
 4. The remaining sequences are BLASTed again the PlasmidFinder replicon database and the rMLST database.
 5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file. Accessions with rMLST loci detected are recorded.
 
@@ -153,7 +162,8 @@ I previously published a similar method for plasmid curation ([Orlek _et al._ 20
     * I used a less stringent and more convoluted approach to decide whether a plasmid sequence was compete: accessions were not required to be annotated as "complete" as long as the title text indicated a "complete" sequence; CuratePlasmids instead excludes any accession that is not annotated as "complete", but does not require explicit mention of completeness in the title text.<br>
     
     [Galata _et al._ (2018)](https://academic.oup.com/nar/article/47/D1/D195/5149885) created [PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) using methods similar to those of the CuratePlasmids pipeline. However, methods of Galata _et al._ differ somewhat; notably:
-    * Although rMLST loci are used to filter chromosomal sequences, in contrast to methods of CuratePlasmids, sequences with up to 5 rMLST loci are included in the database. However, according to a recent review article ([di Cenzo & Finan 2017](https://mmbr.asm.org/content/81/3/e00019-17)), a plasmid-like sequence encoding one or more ribosomal loci should actually be considered a "chromid", which is biologically distinct from a plasmid ([Harrison _et al._ 2010](https://www.ncbi.nlm.nih.gov/pubmed/20080407)). CuratePlasmids makes a distinction between plasmids and chromids whereas PLSDB does not. 
+    * Although rMLST loci are used to filter chromosomal sequences, in contrast to methods of CuratePlasmids, sequences with up to 5 rMLST loci are included in the database. However, according to a recent review article ([di Cenzo & Finan 2017](https://mmbr.asm.org/content/81/3/e00019-17)), a plasmid-like sequence encoding one or more ribosomal loci should actually be considered a "chromid", which is biologically distinct from a plasmid ([Harrison _et al._ 2010](https://www.ncbi.nlm.nih.gov/pubmed/20080407)). CuratePlasmids makes a distinction between plasmids and chromids whereas PLSDB does not.
+    * PLSDB excludes all duplicate sequences (any sequences with a [mash distance](https://mash.readthedocs.io/en/latest/index.html) of 0). By default, CuratePlasmids excludes identical sequences except those with different metadata (biosample accession id, submitter name and owner name all different). The latter are likely to represent interesting cases of transmission of short conserved plasmids. Information on all duplicates is recorded. There is the option to exclude all identical sequences. 
 * **Are there any caveats I should be aware of when using CuratePlasmids?**
 CuratePlasmids relies on NCBI annotation for plasmid topology information (circular / linear). Ideally, a plasmid annotated as 'complete' and 'linear' should be a genuine linear plasmid, but the topology annotation should probably be treated cautiously; a 'linear' plasmid could represent a circular plasmid that failed to circularise after assembly.
 

@@ -31,13 +31,15 @@ parser.add_argument('-e','--emailaddress', help="User's email address which will
 parser.add_argument('-s','--dbsource', help='Database source; refseq or refseq_genbank (default: refseq_genbank)', default="refseq_genbank", choices=["refseq","refseq_genbank"],type=str)
 parser.add_argument('-t','--threads', help='Number of threads to use (default: 1)', default=1, type=positiveint)
 parser.add_argument('-o','--out', help='Output directory (required)', required=True, type=str)
-parser.add_argument('--rmlstdbpath', help='Path to the directory used to store the rmlst database (default: databases/rmlstalleles/blastdbs)',required=False)
+parser.add_argument('--rmlstdbpath', help='Path to the directory used to store the rmlst blast database files (default: databases/rmlstalleles/blastdbs)',required=False)
+parser.add_argument('--rmlstprofilepath', help='Path to the directory used to store the rmlst profile file (default: databases/rmlstalleles)',required=False)
 parser.add_argument('--enterobacdbpath', help='Path to the "enterobacteriaceae" plasmidfinder BLAST database (default: databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb)',required=False)
 parser.add_argument('--gramposdbpath', help='Path to the "gram_positive" plasmidfinder BLAST database (default: databases/plasmidfinder/gram_positive/gram_positivedb)',required=False)
 parser.add_argument('--accessions', help='A text file containing NCBI plasmid accessions in the first column; if provided, these accessions will be retrieved, rather than retrieving plasmid accessions using a query term (default: retrieve accessions using a query term)',required=False)
 parser.add_argument('--sequences', help='A fasta file containing uncharacterised bacterial contig nucleotide sequences; if provided, these contigs will be typed using rmlst and replicon loci to determine whether they are likely to be plasmids or chromosomal (default: retrieve sequences from NCBI)',required=False)
 parser.add_argument('--retrieveaccessionsonly', action='store_true',help='If flag is provided, stop after retrieving and filtering accessions (default: do not stop)',required=False)
 parser.add_argument('--retrievesequencesonly', action='store_true',help='If flag is provided, stop after retrieving sequences from filtered accessions (default: do not stop)',required=False)
+parser.add_argument('--deduplicationmethod', help='Specify how identical sequences should be deduplicated; either "all" duplicates are removed, or duplicates are removed if they share "metadata" (default: "metadata")', default="metadata", choices=["metadata","all"],type=str)
 
 args = parser.parse_args()
 outputpath=os.path.relpath(args.out, cwdir)
@@ -62,7 +64,7 @@ if args.sequences==None:
         sys.exit()
     else:
         runsubprocess(['bash','%s/downloadsequences.sh'%sourcedir,str(args.batchsize),str(args.emailaddress),outputpath])
-        runsubprocess(['python','%s/deduplicateseqs.py'%sourcedir,outputpath])
+        runsubprocess(['python','%s/deduplicateseqs.py'%sourcedir,str(args.deduplicationmethod),outputpath])
         
 
 
@@ -95,16 +97,23 @@ if args.rmlstdbpath==None:
 else:
     rmlstdbpath=str(args.rmlstdbpath)
 
+if args.rmlstprofilepath==None:
+    rmlstprofilepath='%s/databases/rmlstalleles'%sourcedir
+else:
+    rmlstprofilepath=str(args.rmlstprofilepath)
+
 
 if args.sequences==None:
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'enterobacteriaceae',enterobacteriaceaedbpath,str(args.threads),outputpath,'ncbi',sourcedir])
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'gram_positive',gram_positivedbpath,str(args.threads),outputpath,'ncbi',sourcedir])
     runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'ncbi',sourcedir])
-    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, outputpath, 'enterobacteriaceae', 'gram_positive'])
+    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath, 'ncbi','enterobacteriaceae', 'gram_positive'])
 else:
+    cmdArgs=["cat %s | bioawk -c fastx '{print $name,length($seq)}' > %s/seqlengths.tsv"%(str(args.sequences),outputpath)]
+    runsubprocess(cmdArgs,shell=True)
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'enterobacteriaceae',enterobacteriaceaedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.sequences)])
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'gram_positive',gram_positivedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.sequences)])
     runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'user',sourcedir,str(args.sequences)])
-    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, outputpath, 'enterobacteriaceae', 'gram_positive'])
+    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath, 'user','enterobacteriaceae', 'gram_positive'])
 
 
