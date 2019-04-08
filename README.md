@@ -141,7 +141,6 @@ rmlst/                        	    | directory containing output from BLASTing s
 seqlengths.tsv			    | sequence names (from FASTA headers) and corresponding sequence lengths
 typing.tsv			    | information on sequences including replicon typing and rMLST typing
 
-Accessions in rmlstrepaccessions.tsv are likely to be chromids. Accessions in rmlstonlyaccessions.tsv may be chromid sequences that don't contain a known plasmid replicon locus; alternatively, they may be chromosomal sequences mis-annotated as plasmids.
 
 
 # Background and methods
