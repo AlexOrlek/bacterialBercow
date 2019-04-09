@@ -37,7 +37,7 @@ __Why use bacterialBercow__?<br>
 
 * Linux or MacOS (with the [Bash shell](https://en.wikibooks.org/wiki/Bash_Shell_Scripting#What_is_Bash?), which is the default shell on MacOS and many Linux distributions)
 * [Python](https://www.python.org/) 3 is required for the `database_setup.py` executable (tested using Python 3.5); the `order.py` executable works with Python 2 (tested with Python 2.7) or Python 3
-* [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK52640/#_chapter1_Installation_)
+* [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK52640/#_chapter1_Installation_) (tested using version 2.6.0)
 * [edirect](https://www.ncbi.nlm.nih.gov/books/NBK179288/)
 * [bioawk](https://github.com/lh3/bioawk)
 * The [rMLST database](https://pubmlst.org/rmlst/) (follow installation instructions below)
