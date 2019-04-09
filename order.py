@@ -36,10 +36,12 @@ parser.add_argument('--rmlstprofilepath', help='Path to the directory used to st
 parser.add_argument('--enterobacdbpath', help='Path to the "enterobacteriaceae" plasmidfinder BLAST database (default: databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb)',required=False)
 parser.add_argument('--gramposdbpath', help='Path to the "gram_positive" plasmidfinder BLAST database (default: databases/plasmidfinder/gram_positive/gram_positivedb)',required=False)
 parser.add_argument('--accessions', help='A text file containing NCBI plasmid accessions in the first column; if provided, these accessions will be retrieved, rather than retrieving plasmid accessions using a query term (default: retrieve accessions using a query term)',required=False)
-parser.add_argument('--sequences', help='A fasta file containing uncharacterised bacterial contig nucleotide sequences; if provided, these contigs will be typed using rmlst and replicon loci to determine whether they are likely to be plasmids or chromosomal (default: retrieve sequences from NCBI)',required=False)
 parser.add_argument('--retrieveaccessionsonly', action='store_true',help='If flag is provided, stop after retrieving and filtering accessions (default: do not stop)',required=False)
 parser.add_argument('--retrievesequencesonly', action='store_true',help='If flag is provided, stop after retrieving sequences from filtered accessions (default: do not stop)',required=False)
 parser.add_argument('--deduplicationmethod', help='Specify how identical sequences should be deduplicated; either "all" duplicates are removed, or duplicates are removed if they share "metadata" (default: "metadata")', default="metadata", choices=["metadata","all"],type=str)
+parser.add_argument('--sequences', help='A fasta file containing uncharacterised bacterial contig nucleotide sequences; if provided, these contigs will be typed using rmlst and replicon loci to determine whether they are likely to be plasmids or chromosomal (default: retrieve sequences from NCBI)',required=False)
+parser.add_argument('--typing', help='Specifies what sequence typing to perform (only applicable if in-house sequences are provided using --sequences flag); either "replicon", "rmlst" typing or "both" (default: both)',default="both",required=False)
+
 
 args = parser.parse_args()
 outputpath=os.path.relpath(args.out, cwdir)
@@ -114,6 +116,6 @@ else:
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'enterobacteriaceae',enterobacteriaceaedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.sequences)])
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'gram_positive',gram_positivedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.sequences)])
     runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'user',sourcedir,str(args.sequences)])
-    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath, 'user','enterobacteriaceae', 'gram_positive'])
+    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,str(args.typing), 'user','enterobacteriaceae', 'gram_positive'])
 
 

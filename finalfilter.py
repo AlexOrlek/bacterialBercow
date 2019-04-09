@@ -2,84 +2,94 @@ import sys
 from Bio import SeqIO
 from pythonmods import inctyping, rmlstprofile,rmlsttypingalleles
 
-plasmidfinderdatabases=sys.argv[4:]
+
 rmlstprofilepath=sys.argv[1]
 outdir=sys.argv[2]
 sequenceorigin=sys.argv[3]
-
+if sequenceorigin=='ncbi':
+    typing='both' #both replicon and rMLST typing are performed in order to curate NCBI sequences
+    plasmidfinderdatabases=sys.argv[4:]
+else:
+    typing=sys.argv[4]
+    plasmidfinderdatabases=sys.argv[5:]
+    
 #also need to include whether using inhouse sequences or ncbi (is there accessions_filtered file?) ? should be _deduplicated?
 
-#get replicon types
-enterobacaccessions=[]
-gram_posaccessions=[]
-enterobacaccessionsdict={}
-gram_posaccessionsdict={}
-for database in plasmidfinderdatabases:
-    with open('%s/plasmidfinder/BLASTtablebesthits_%s.tsv'%(outdir,database)) as f:
+###replicon typing
+if typing=='both' or typing=='replicon':
+    #get replicon types
+    enterobacaccessions=[]
+    gram_posaccessions=[]
+    enterobacaccessionsdict={}
+    gram_posaccessionsdict={}
+    for database in plasmidfinderdatabases:
+        with open('%s/plasmidfinder/BLASTtablebesthits_%s.tsv'%(outdir,database)) as f:
+            for line in f:
+                data=line.strip().split('\t')
+                accession=data[0]
+                allele=data[1]
+                if database=="enterobacteriaceae":
+                    enterobacaccessions.append(accession)
+                    if accession in enterobacaccessionsdict:
+                        enterobacaccessionsdict[accession].append(allele)
+                    else:
+                        enterobacaccessionsdict[accession]=[]
+                        enterobacaccessionsdict[accession].append(allele)
+                else:
+                    gram_posaccessions.append(accession)
+                    if accession in gram_posaccessionsdict:
+                        gram_posaccessionsdict[accession].append(allele)
+                    else:
+                        gram_posaccessionsdict[accession]=[]
+                        gram_posaccessionsdict[accession].append(allele)
+
+    enterobacaccessions=list(set(enterobacaccessions))
+    gram_posaccessions=list(set(gram_posaccessions))
+    repaccessions=list(set(enterobacaccessions+gram_posaccessions))
+
+    #do replicon typing
+    reptypedict={}
+    for accession in repaccessions:
+        reptypedict[accession]=[]
+        if accession in enterobacaccessionsdict:
+            types,families,probes,length=inctyping(accession, enterobacaccessionsdict,db="enterobacteriaceae")
+        else:
+            types,families,probes,length=['-','-','-','-']
+        reptypedict[accession].extend([types,probes,length])
+        if accession in gram_posaccessionsdict:
+            types,families,probes,length=inctyping(accession, enterobacaccessionsdict,db="gram_positive")
+        else:
+            types,families,probes,length=['-','-','-','-']
+        reptypedict[accession].extend([types,probes,length])  #not including families
+
+
+###rmlst typing
+if typing=='both' or typing=='replicon':
+    #get rmlst types
+    rmlstaccessions=[]
+    rmlstaccessionsdict={}
+    with open('%s/rmlst/BLASTtablebesthits.tsv'%outdir) as f:
         for line in f:
             data=line.strip().split('\t')
             accession=data[0]
             allele=data[1]
-            if database=="enterobacteriaceae":
-                enterobacaccessions.append(accession)
-                if accession in enterobacaccessionsdict:
-                    enterobacaccessionsdict[accession].append(allele)
-                else:
-                    enterobacaccessionsdict[accession]=[]
-                    enterobacaccessionsdict[accession].append(allele)
+            rmlstaccessions.append(accession)
+            if accession in rmlstaccessionsdict:
+                rmlstaccessionsdict[accession].append(allele)
             else:
-                gram_posaccessions.append(accession)
-                if accession in gram_posaccessionsdict:
-                    gram_posaccessionsdict[accession].append(allele)
-                else:
-                    gram_posaccessionsdict[accession]=[]
-                    gram_posaccessionsdict[accession].append(allele)
-                
-enterobacaccessions=list(set(enterobacaccessions))
-gram_posaccessions=list(set(gram_posaccessions))
-repaccessions=list(set(enterobacaccessions+gram_posaccessions))
+                rmlstaccessionsdict[accession]=[]
+                rmlstaccessionsdict[accession].append(allele)
 
-#do replicon typing
-reptypedict={}
-for accession in repaccessions:
-    reptypedict[accession]=[]
-    if accession in enterobacaccessionsdict:
-        types,families,probes,length=inctyping(accession, enterobacaccessionsdict,db="enterobacteriaceae")
-    else:
-        types,families,probes,length=['-','-','-','-']
-    reptypedict[accession].extend([types,probes,length])
-    if accession in gram_posaccessionsdict:
-        types,families,probes,length=inctyping(accession, enterobacaccessionsdict,db="gram_positive")
-    else:
-        types,families,probes,length=['-','-','-','-']
-    reptypedict[accession].extend([types,probes,length])  #not including families
-    
-
-#get rmlst types
-rmlstaccessions=[]
-rmlstaccessionsdict={}
-with open('%s/rmlst/BLASTtablebesthits.tsv'%outdir) as f:
-    for line in f:
-        data=line.strip().split('\t')
-        accession=data[0]
-        allele=data[1]
-        rmlstaccessions.append(accession)
-        if accession in rmlstaccessionsdict:
-            rmlstaccessionsdict[accession].append(allele)
-        else:
-            rmlstaccessionsdict[accession]=[]
-            rmlstaccessionsdict[accession].append(allele)
-
-rmlstaccessions=list(set(rmlstaccessions))
+    rmlstaccessions=list(set(rmlstaccessions))
 
 
-#do rmlst typing
-rmlstprofileoutput=rmlstprofile('%s/profiles.txt'%rmlstprofilepath)
-rmlsttypedict={}
-for accession in rmlstaccessions:
-    alleles=rmlstaccessionsdict[accession]
-    rmlsttype=rmlsttypingalleles(alleles,rmlstprofileoutput)
-    rmlsttypedict[accession]=rmlsttype #a tuple of species, rST top match, num_matches, num_mismatches, num_missing loci, rmlstalleles
+    #do rmlst typing
+    rmlstprofileoutput=rmlstprofile('%s/profiles.txt'%rmlstprofilepath)
+    rmlsttypedict={}
+    for accession in rmlstaccessions:
+        alleles=rmlstaccessionsdict[accession]
+        rmlsttype=rmlsttypingalleles(alleles,rmlstprofileoutput)
+        rmlsttypedict[accession]=rmlsttype #a tuple of species, rST top match, num_matches, num_mismatches, num_missing loci, rmlstalleles
 
 
 
@@ -140,7 +150,7 @@ if sequenceorigin=='ncbi':
 
 
 else:
-    ###output tsv with rmlst and replicon typing info
+    ###output tsv with rmlst and/or replicon typing info
     #get seqlengths
     seqlengthdict={}
     accessions=[]
@@ -153,20 +163,37 @@ else:
             accessions.append(accession)
     #write tsv
     f2=open('%s/typing.tsv'%outdir,'w')
-    f2.write('Accession\tLength\t\tSpecies\tribosomalST\tNum_Matches\tNum_Mismatches\tNum_Missing_Loci\trMLST_alleles\tEnterobacteriaceae_Type\tProbe_Hits\tNum_Probe_hits\tGram_positive_Type\tProbe_Hits\tNum_Probe_hits\n')
+    header=['Accession','Length']
+    if typing=='both' or typing=='rmlst':
+        header.extend(['Species','ribosomalST','Num_Matches','Num_Mismatches','Num_Missing_Loci','rMLST_alleles'])
+    if typing=='both' or typing=='replicon':
+        header.extend(['Enterobacteriaceae_Type','Probe_Hits','Num_Probe_hits','Gram_positive_Type','Probe_Hits','Num_Probe_hits'])
+    header='\t'.join(header)
+    f2.write('%s\n'%header)
     for accession in accessions:
-        #get replicon types
-        if accession in reptypedict:
-            reptype=reptypedict[accession]
+        if typing=='both' or typing=='rmlst':
+            #get rmlst type
+            if accession in rmlsttypedict:
+                rmlsttype=rmlsttypedict[accession]
+            else:
+                rmlsttype=('-','-','-','-','-','-')
+        if typing=='both' or typing=='replicon':
+            #get replicon types
+            if accession in reptypedict:
+                reptype=reptypedict[accession]
+            else:
+                reptype=('-','-','-','-','-','-')
+        #write to file
+        if typing=='both':
+            f2.write('%s\t%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(rmlsttype),'\t'.join(reptype)))
+        elif typing=='rmlst':
+            f2.write('%s\t%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(rmlsttype)))
         else:
-            reptype=('-','-','-','-','-','-')
-        #get rmlst type
-        if accession in rmlsttypedict:
-            rmlsttype=rmlsttypedict[accession]
-        else:
-            rmlsttype=('-','-','-','-','-','-')
-        f2.write('%s\t%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(rmlsttype),'\t'.join(reptype)))
+            f2.write('%s\t%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(reptype)))
     f2.close()
+
+
+
 
 #OLD CODE
 # #get rmlstonly / rmlstrep accessions

@@ -1,6 +1,6 @@
 # bacterialBercow
 
-bacterialBercow is a command-line tool for identifying bacterial plasmids from the [NCBI nucleotide](https://www.ncbi.nlm.nih.gov/nucleotide/) database, or from your own sequence assemblies.
+bacterialBercow is a command-line tool for retrieving complete bacterial plasmids from the [NCBI nucleotide](https://www.ncbi.nlm.nih.gov/nucleotide/) database; and for characterising contigs from your own bacterial sequence assemblies (distinguishing plasmid and chromosomal contigs).
 
 # Table of contents
 
@@ -19,12 +19,17 @@ bacterialBercow is a command-line tool for identifying bacterial plasmids from t
 
 # Introduction
 
-Retrieving complete plasmid sequences from the NCBI nucleotide database requires quality-filtering to exclude partial plasmid sequences, or chromosomal sequences mis-annotated as plasmids. I previously outlined methods to curate NCBI plasmids ([Orlek _et al_. 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183)). Following similar methods, bacterialBercow allows users to first retrieve putative complete plasmid sequences from NCBI, and then characterise these sequences by detecting [replicon loci](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and [rMLST loci](https://pubmlst.org/rmlst/). As a result, genuine complete plasmid sequences can be identified. bacterialBercow also allows users to characterise their in-house assembled sequences to distinguish plasmid and chromosomal contigs.<br>
+__Retrieving complete bacterial plasmids from NCBI__:<br>
+Retrieving complete plasmid sequences from the NCBI nucleotide database requires quality-filtering to exclude partial plasmid sequences, or chromosomal sequences mis-annotated as plasmids. I previously outlined methods to curate NCBI bacterial plasmids ([Orlek _et al_. 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183)). Following similar methods, bacterialBercow allows users to first retrieve putative complete bacterial plasmid sequences from NCBI, and then characterise these sequences by detecting [replicon loci](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and ribosomal multi-locus sequence typing ([rMLST](https://pubmlst.org/rmlst/)) loci. As a result, genuine complete plasmid sequences can be identified.
 
+__Characterising in-house bacterial sequence assemblies__:<br>
+bacterialBercow also allows users to characterise their own in-house assembled sequences to distinguish plasmid and chromosomal contigs (using replicon typing and rMLST, like for sequences retrieved from NCBI).<br>
+
+__Why use bacterialBercow__?<br>
 [PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) is an online database of curated plasmids, updated every ~3 months, so this is an easy way to get hold of NCBI plasmid sequences, and as an online database it comes with nice interactive features. However, there are reasons why you may want to use bacterialBercow instead (see [FAQ](#faq) for details). Notably, bacterialBercow is useful if you want to:
-* Characterise in-house sequence data that has not yet been uploaded to NCBI.
-* Retrive the most up-to-date set of plasmids from NCBI.
+* Categorise (as plasmid/chromosomal) and characterise in-house sequence data that has not yet been uploaded to NCBI, using replicon typing and rMLST typing. Note that in addition to rMLST loci being useful markers of chromosomal sequence, the rMLST typing scheme can be used to determine bacterial species; as far as I know, there are currently no other command-line tools for rMLST-based taxonomy (only the [rMLST website](https://pubmlst.org/rmlst/)). 
 * Identify ['chromid'](https://www.ncbi.nlm.nih.gov/pubmed/20080407) sequences.
+* Retrive the most up-to-date set of plasmids from NCBI.
 * Check the curation process at each step (which sequences are being excluded and why); and use this to fine-tune curation methods if desired. 
 
 
@@ -37,7 +42,7 @@ Retrieving complete plasmid sequences from the NCBI nucleotide database requires
 * [bioawk](https://github.com/lh3/bioawk)
 * The [rMLST database](https://pubmlst.org/rmlst/) (follow installation instructions below)
 
-Note, the [PlasmidFinder](https://bitbucket.org/genomicepidemiology/plasmidfinder_db) database for replicon typing is included in the repository (retrieved 23-Apr-2018). Both "enterobacteriaceae" and "gram_positive" components of the database are included. You can use a more recent version of PlasmidFinder if you wish (see [Options and usage](#Options-and-usage)).
+Note, the [PlasmidFinder](https://bitbucket.org/genomicepidemiology/plasmidfinder_db) database for replicon typing is included in the repository (retrieved 9th-Apr-2019). Both "enterobacteriaceae" and "gram_positive" components of the database are included. You can use a more recent version of PlasmidFinder if you wish (see [Options and usage](#Options-and-usage)).
 
 # Installation
 
@@ -85,7 +90,7 @@ To retrieve and curate a custom set of NCBI accessions:
 `order.py -e first.last@email.com --accessions myaccessions.txt -o output-directory`
 
 
-To curate your own plasmid sequences, provide an input multifasta file:
+To characterise your own bacterial sequences, provide an input multifasta file:
 
 `order.py --sequences samples.fasta -o output-directory`
 
@@ -107,7 +112,8 @@ The `--accessions` flag allows a user to bypass the NCBI query stage, and instea
 The `--retrieveaccessionsonly` flag outputs until `accessions_filtered.tsv` (see [Output file](output-files) and [Background and methods](#background-and-methods)).<br>
 The `--retrievesequencesonly` flag outputs until `accessions_filtered_deduplicated.fa`, but does not run the more time-consuming BLAST-based filtering.<br>
 As an example, if you wish to update an existing database with more recent accessions, you could run bacterialBercow with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of bacterialBercow by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.<br>
-The `--sequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and rMLST typing. 
+The `--sequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and rMLST typing.<br>
+The `--typing` flag is applicable if the `--sequences` flag is provided. By default both replicon and rMLST typing will be conducted on in-house sequences, but a user can specify for only `replicon` typing or only `rmlst` typing. For accessions retrieved from NCBI both replicon and rMLST typing are performed since this helps to distinguish plasmids from chromosomal sequence and chromids. 
 
 
 # Output files
@@ -145,31 +151,33 @@ typing.tsv			    | information on sequences including replicon typing and rMLST 
 
 # Background and methods
 
-For background information on curating plasmids see recent papers: [Orlek _et al._ (2017)](https://www.ncbi.nlm.nih.gov/pubmed/28286183) and [Galata _et al._ (2018)](https://academic.oup.com/nar/article/47/D1/D195/5149885). A brief outline of the steps of the complete pipeline (including retrieval from NCBI) is given below:
+For background information on curating NCBI plasmids see recent papers: [Orlek _et al._ (2017)](https://www.ncbi.nlm.nih.gov/pubmed/28286183) and [Galata _et al._ (2018)](https://academic.oup.com/nar/article/47/D1/D195/5149885). A brief outline of the steps of the complete pipeline (including retrieval from NCBI) is given below:
 
 1. Putative complete plasmid accessions, along with accompanying information such as accession title are downloaded from NCBI nucleotide. To be considered a putative plasmid, the accession must be annotated as "plasmid" and "complete".
-2. The accessions are filtered using a regular expression search of the accession title text. For example, titles including the words "gene", "transposon", or "synthetic vector" would be excluded.
-3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates; therefore, deduplication is conducted: accessions with identical sequences and shared metadata (same biosample accession id or submitter name or owner name) are deduplicated. When selecting a single accession from duplicates, Refseq accessions are favoured over Genbank accessions. 
+2. To select for complete plasmid genomes, the accessions are filtered using a regular expression search of the accession title text. For example, titles including the words "gene", "transposon", or "synthetic vector" would be excluded.
+3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates; therefore, deduplication is conducted: accessions that have identical nucleotide sequences and that share any item of [biosample metadata](https://www.ncbi.nlm.nih.gov/books/NBK169436/) provided are deduplicated. The metadata items examined are: Biosample Accession ID, and "Owner" field details - submitter contact name / submitter affiliation name. When selecting a single accession from duplicates, Refseq accessions are favoured over Genbank accessions. 
 4. The remaining sequences are BLASTed again the PlasmidFinder replicon database and the rMLST database.
-5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file. Accessions with rMLST loci detected are recorded.
+5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file. Accessions with rMLST loci detected are recorded; these could be chromid or chromosomal sequences.
 
 # FAQ
 
-* **How does bacterialBercow differ from previously published plasmid curation methods?**
+* **Why is the tool called bacterialBercow?**
+At the time of writing, [John Bercow](https://en.wikipedia.org/wiki/John_Bercow) is the [Speaker of the House of Commons](https://en.wikipedia.org/wiki/Speaker_of_the_House_of_Commons_(United_Kingdom)), responible for bringing order to UK parliamentary debates in [unruly times](https://www.youtube.com/watch?v=EY7EIZl4raY). As I explained in my "Ordering the mob" paper, these are unruly times for bacterial researchers too - faced with a deluge of sequence data which must be ordered as plasmid / chromosomal / chromid. 
+* **How do the methods of bacterialBercow differ from previously published methods for retrieving and curating NCBI plasmids?**
 I previously published a similar method for plasmid curation ([Orlek _et al._ 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183)), but compared with bacterialBercow, the methods in the paper differ in several key ways:
-    * I used MLST rather than rMLST to filter chromosomal accessions. MLST loci are more limited as a chromosomal marker since MLST schemes cover fewer taxa.
+    * I used [MLST](https://pubmlst.org/general.shtml) rather than rMLST to filter chromosomal accessions. MLST loci are more limited as a chromosomal marker since MLST schemes cover fewer taxa.
     * I used a less stringent and more convoluted approach to decide whether a plasmid sequence was compete: accessions were not required to be annotated as "complete" as long as the title text indicated a "complete" sequence; bacterialBercow instead excludes any accession that is not annotated as "complete", but does not require explicit mention of completeness in the title text.<br>
     
     [Galata _et al._ (2018)](https://academic.oup.com/nar/article/47/D1/D195/5149885) created [PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) using methods similar to those of the bacterialBercow pipeline. However, methods of Galata _et al._ differ somewhat; notably:
     * Although rMLST loci are used to filter chromosomal sequences, in contrast to methods of bacterialBercow, sequences with up to 5 rMLST loci are included in the database. However, according to a recent review article ([di Cenzo & Finan 2017](https://mmbr.asm.org/content/81/3/e00019-17)), a plasmid-like sequence encoding one or more ribosomal loci should actually be considered a "chromid", which is biologically distinct from a plasmid ([Harrison _et al._ 2010](https://www.ncbi.nlm.nih.gov/pubmed/20080407)). bacterialBercow makes a distinction between plasmids and chromids whereas PLSDB does not.
-    * PLSDB excludes all duplicate sequences (any sequences with a [mash distance](https://mash.readthedocs.io/en/latest/index.html) of 0). By default, bacterialBercow excludes identical sequences except those with different metadata (biosample accession id, submitter name and owner name all different). The latter are likely to represent interesting cases of transmission of short conserved plasmids. Information on all duplicates is recorded. There is the option to exclude all identical sequences. 
-* **Are there any caveats I should be aware of when using bacterialBercow?**
-bacterialBercow relies on NCBI annotation for plasmid topology information (circular / linear). Ideally, a plasmid annotated as 'complete' and 'linear' should be a genuine linear plasmid, but the topology annotation should probably be treated cautiously; a 'linear' plasmid could represent a circular plasmid that failed to circularise after assembly.
+    * PLSDB excludes all duplicate sequences (any sequences with a [mash distance](https://mash.readthedocs.io/en/latest/index.html) of 0). By default, bacterialBercow excludes identical sequences except those with different biosample metadata. The latter are likely to represent interesting cases of transmission of short conserved plasmids. Information on all duplicates is recorded. There is the option to exclude all identical sequences, irrespective of whether metadata differs. 
+* **Are there any caveats I should be aware of when using bacterialBercow to retrieve and curate NCBI plasmids?**
+bacterialBercow relies on NCBI annotation for plasmid topology information (circular / linear). Ideally, a plasmid annotated as 'complete' and 'linear' should be a genuine linear plasmid, but the topology annotation should probably be treated cautiously, particularly since linear is the [default value when submitting to NCBI](https://www.ncbi.nlm.nih.gov/books/NBK293904/); also, a 'linear' plasmid could represent a circular plasmid that failed to circularise after assembly.
 
 
 # Acknowledgements
 
-I am grateful to Dr Keith Jolley informing me about programmatic access to the rMLST database and for pointing me towards [ConFindr](https://olc-bioinformatics.github.io/ConFindr/) software, which implements programmatic access. The `database_setup.py` executable used in bacterialBercow is based on a script from ConFindr.
+I am grateful to Dr Keith Jolley for informing me about programmatic access to the rMLST database and for pointing me towards [ConFindr](https://olc-bioinformatics.github.io/ConFindr/) software, which implements programmatic access. The `database_setup.py` executable used in bacterialBercow is based on a script from ConFindr.
 
 
 # License
