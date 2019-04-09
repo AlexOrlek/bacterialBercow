@@ -71,7 +71,7 @@ F$M+fQ2AFFB2YBDfF9fpHF^qSWJdmmN%L4Fxf5Gur3
 * Install the database by running the `database_setup.py` executable (with Python 3 set as your default Python version), providing the `-s` flag with the file containing the secret id and secret:<br>
 
 ```bash
-`database_setup.py -s secretfile.txt`
+database_setup.py -s secretfile.txt
 ```
 
 * Follow the instructions that appear on screeen. The rMLST database will be installed in the databases directory within the repository.
