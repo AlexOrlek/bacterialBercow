@@ -54,7 +54,7 @@ steps_group = parser.add_argument_group('Customising pipeline steps (specifying 
 steps_group.add_argument('--accessions', help='A text file containing NCBI plasmid accessions in the first column; if provided, these accessions will be retrieved, rather than retrieving plasmid accessions using a query term (default: retrieve accessions using a query term)',required=False)
 steps_group.add_argument('--retrieveaccessionsonly', action='store_true',help='If flag is provided, stop after retrieving and filtering accessions (default: do not stop)',required=False)
 steps_group.add_argument('--retrievesequencesonly', action='store_true',help='If flag is provided, stop after retrieving sequences from filtered accessions (default: do not stop)',required=False)
-steps_group.add_argument('--restartwithsequences', help='If flag is provided, re-start the pipeline using sequences retrieved from NCBI',required=False)
+steps_group.add_argument('--restartwithsequences', action='store_true',help='If flag is provided, re-start the pipeline using sequences retrieved from NCBI',required=False)
 steps_group.add_argument('--inhousesequences', help='A fasta file containing uncharacterised bacterial contig nucleotide sequences; if provided, these contigs will be typed using rmlst and replicon loci to determine whether they are likely to be plasmids or chromosomal (default: retrieve sequences from NCBI)',required=False)
 
 args = parser.parse_args()
