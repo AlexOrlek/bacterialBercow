@@ -118,13 +118,13 @@ The `--typing` flag is applicable if the `--inhousesequences` flag is provided. 
 __Pipeline step options specifying starting and stopping points__:<br>
 If provided, the `--retrieveaccessionsonly` flag will stop the pipeline after `accessions_filtered.tsv` is produced (see [Output file](output-files) and [Background and methods](#background-and-methods)).<br>
 If provided, the `--retrievesequencesonly` flag will stop the pipeline after `accessions_filtered_deduplicated.fa` is produced.<br>
-If provided,the `--restartwithsequences` flag will re-start the pipeline from the point where `--retrievesequencesonly` stopped the pipeline. 
+If provided, the `--restartwithsequences` flag will re-start the pipeline from the point where `--retrievesequencesonly` stopped the pipeline. The output directory specified must be the same as the output directory that was previously specified when the pipeline was run with the `--retrievesequencesonly` flag.<br>
 The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions.<br>
 The `--inhousesequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and rMLST typing.<br>
 <br>
-__Example 1__: you wish to update an existing database with more recent accessions:<br>
+_Example 1: you wish to update an existing database with more recent accessions:_<br>
 You could run bacterialBercow with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of bacterialBercow by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.<br>
-__Example 2__: you have access to a computer cluster which can be run with lots of `--threads` but for security reasons, the HTTPS protocol (required for accessing data from NCBI) is not permitted:<br>
+_Example 2: you have access to a computer cluster which can be run with lots of `--threads` but for security reasons, the HTTPS protocol (required for accessing data from NCBI) is not permitted:_<br>
 You could run bacterialBercow in two stages. First, on your own computer, run bacterialBercow with the `--retrievesequencesonly` flag. Then, with the same output directory (`-o` flag) specified, run the typing stage of the pipeline on your computer cluster by providing the `--restartwithsequences` flag along with lots of `--threads`.
 
 
@@ -175,7 +175,7 @@ For background information on curating NCBI plasmids see recent papers: [Orlek _
 # FAQ
 
 * **Why is the tool called bacterialBercow?**
-At the time of writing, [John Bercow](https://en.wikipedia.org/wiki/John_Bercow) is the [Speaker of the House of Commons](https://en.wikipedia.org/wiki/Speaker_of_the_House_of_Commons_(United_Kingdom)), responsible for bringing order to UK parliamentary debates in [unruly times](https://www.youtube.com/watch?v=EY7EIZl4raY). As I explained in my "Ordering the mob" paper, these are unruly times for bacterial researchers too - faced with a deluge of sequence data available via NCBI and from in-house sequencing projects. 
+At the time of writing, [John Bercow](https://en.wikipedia.org/wiki/John_Bercow) is the [Speaker of the House of Commons](https://en.wikipedia.org/wiki/Speaker_of_the_House_of_Commons_(United_Kingdom)); he is responsible for bringing order to UK parliamentary debates in [unruly times](https://www.youtube.com/watch?v=EY7EIZl4raY), and does so by yelling "Order! Ordeerr!". As I explained in my "Ordering the mob" paper, these are unruly times for bacterial researchers too - faced with a deluge of sequence data available via NCBI and from in-house sequencing projects. 
 * **How do the methods of bacterialBercow differ from previously published methods for retrieving and curating NCBI plasmids?**
 I previously published a similar method for plasmid curation ([Orlek _et al._ 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183)), but compared with bacterialBercow, the methods in the paper differ in several key ways:
     * I used [MLST](https://pubmlst.org/general.shtml) rather than rMLST to filter chromosomal accessions. MLST loci are more limited as a chromosomal marker since MLST schemes cover fewer taxa.
