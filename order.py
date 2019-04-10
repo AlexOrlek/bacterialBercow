@@ -64,7 +64,7 @@ cmdArgs=['mkdir -p %s'%outputpath]
 runsubprocess(cmdArgs,shell=True)
 
 ###retrieve accessions and sequences from NCBI
-if args.inhousesequences==None and args.restartwithsequences==None:
+if args.inhousesequences==None and args.restartwithsequences==False:
     if args.accessions==None:
         if args.datequery==None:
             datepresent="absent"
@@ -130,6 +130,6 @@ else:
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'enterobacteriaceae',enterobacteriaceaedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'gram_positive',gram_positivedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
     runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
-    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,str(args.typing), 'user','enterobacteriaceae', 'gram_positive'])
+    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,'user',str(args.typing),'enterobacteriaceae', 'gram_positive'])
 
 

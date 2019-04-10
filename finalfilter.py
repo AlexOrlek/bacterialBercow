@@ -64,7 +64,7 @@ if typing=='both' or typing=='replicon':
 
 
 ###rmlst typing
-if typing=='both' or typing=='replicon':
+if typing=='both' or typing=='rmlst':
     #get rmlst types
     rmlstaccessions=[]
     rmlstaccessionsdict={}
