@@ -142,7 +142,7 @@ accessions_filtered.tsv        	    | accessions remaining, after filtering base
 excludedaccessions.tsv	     	    | accessions excluded, after filtering based on accession title text  
 accessions_filtered_biosamples.tsv  | biosample accessions associated with accessions_filtered.tsv  
 accessions_filtered_metadata.tsv    | biosample metadata (submitter name and owner name) associated with biosample accessions  
-duplicateaccessions.tsv		    | accessions excluded, after removal of duplicate sequences with shared metadata 
+identicalaccessions.tsv		    | accessions with identical sequences, and information on the metadata they share 
 accessions_filtered.fa              | sequences of accessions_filtered.tsv		    
 accessions_filtered_deduplicated.fa | sequences remaining after removal of duplicate sequences with shared metadata  
 plasmidfinder/                	    | directory containing outputs from BLASTing remaining sequences against plasmid replicon loci

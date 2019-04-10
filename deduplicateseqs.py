@@ -82,7 +82,7 @@ for indx, seq_record in enumerate(SeqIO.parse(fileObj,"fasta")):
 #write to file
 deduplicatebymetadata=False #deduplicate all identical accessions
 f2=open('%s/accessions_filtered_deduplicated.fa'%outdir,'w')
-f3=open('%s/duplicateaccessions.tsv'%outdir,'w')
+f3=open('%s/identicalaccessions.tsv'%outdir,'w')
 f3.write('Accessions\tRefseq_Accessions\tGenbank_Accessions\tBiosamples\tSubmitter_Names\tOwners\tUnique_Biosamples\tUnique_Names\tUnique_Owners\tNum_Accessions\tNum_Refseq_Accessions\tNum_Genbank_Accessions\tNum_Unique_Biosamples\tNum_Unique_Names\tNum_Unique_Owners\tSame_Biosample\tSame_Submitter_Name\tSame_Owner\n')
 for seq, values in plasmiddict.iteritems():
     if len(values)>1: #multiple accessions for a given sequence

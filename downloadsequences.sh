@@ -33,8 +33,10 @@ do
 	chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
 	#echo "$chunkedaccessionsinput"	
 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion BioSample >> ${outdir}/accessions_filtered_biosamples.tsv
+	sleep 1
 	#echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | elink -target biosample | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element Accession First Last >> ${outdir}/accessions_filtered_metadata.tsv
 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | elink -target biosample | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -first -VAR1 Accession -VAR2 First -VAR3 Last -block Owner -def "-" -sep " " -element "&VAR1" "&VAR2","&VAR3" -first Name >> ${outdir}/accessions_filtered_metadata.tsv
+	sleep 1
 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format fasta >> ${outdir}/accessions_filtered.fa
 	break
     else
@@ -43,8 +45,10 @@ do
         chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
 	#echo "$chunkedaccessionsinput"
 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion BioSample >> ${outdir}/accessions_filtered_biosamples.tsv
+	sleep 1
 	#echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | elink -target biosample | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element Accession First Last >> ${outdir}/accessions_filtered_metadata.tsv
 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | elink -target biosample | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -first -VAR1 Accession -VAR2 First -VAR3 Last -block Owner -def "-" -sep " " -element "&VAR1" "&VAR2","&VAR3" -first Name >> ${outdir}/accessions_filtered_metadata.tsv
+	sleep 1
 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format fasta >> ${outdir}/accessions_filtered.fa
         sleep 1
     fi

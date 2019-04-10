@@ -36,7 +36,7 @@ ncbi_group.add_argument('-e','--emailaddress', help="User's email address which 
 ncbi_group.add_argument('--taxonomyquery', help='Taxonomy search query term to be supplied to the edirect eseach -query argument (default: bacteria[porgn:__txid2])', default="bacteria[porgn:__txid2])", type=str)
 ncbi_group.add_argument('--datequery', help='Date search query term to be supplied to the edirect eseach -query argument (e.g. "2017/01/01"[PDAT] : "3000"[PDAT] would retrieve records since 2017) (not required)', required=False, type=str)
 ncbi_group.add_argument('-s','--dbsource', help='Database source; refseq or refseq_genbank (default: refseq_genbank)', default="refseq_genbank", choices=["refseq","refseq_genbank"],type=str)
-ncbi_group.add_argument('-b','--batchsize', help='Number of accession nucleotide records to retrieve per edirect query (default: 500; min: 2; max: 500)', default=500, type=batchsizeint)
+ncbi_group.add_argument('-b','--batchsize', help='Number of accession nucleotide records to retrieve per edirect query (default: 200; min: 2; max: 500)', default=200, type=batchsizeint)
 ncbi_group.add_argument('--deduplicationmethod', help='Specify how identical sequences should be deduplicated; either "all" duplicates are removed, or duplicates are removed if they share "metadata" (default: "metadata")', default="metadata", choices=["metadata","all"],type=str)
 
 #Replicon and rMLST typing options
