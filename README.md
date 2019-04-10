@@ -39,6 +39,7 @@ __Why use bacterialBercow__?<br>
 * [Python](https://www.python.org/) 3 is required for the `database_setup.py` executable (tested using Python 3.5); the `order.py` executable works with Python 2 (tested with Python 2.7) or Python 3
 * [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK52640/#_chapter1_Installation_) (tested using version 2.6.0)
 * [edirect](https://www.ncbi.nlm.nih.gov/books/NBK179288/)
+* A computer with internet access via the HTTPS protocol - required for retrieving data from NCBI.
 * [bioawk](https://github.com/lh3/bioawk)
 * The [rMLST database](https://pubmlst.org/rmlst/) (follow installation instructions below)
 
@@ -92,28 +93,40 @@ To retrieve and curate a custom set of NCBI accessions:
 
 To characterise your own bacterial sequences, provide an input multi-FASTA file:
 
-`order.py --sequences samples.fasta -o output-directory`
+`order.py --inhousesequences samples.fasta -o output-directory`
 
 
 
 # Options and usage
 
-`order.py --help` produces a summary of all the options.
+`order.py --help` produces a summary of all the options. All commands must include the `-o` flag specifying output directory. The other key flags are summarised below:
 
-
-`--enterobacdbpath` and `--gramposdbpath` flags can be provided with paths to your own PlasmidFinder enterobacteriaceae and gram_positive BLAST databases (created by running the `makeblastdb` command on the FASTA files using [command line BLAST](https://www.ncbi.nlm.nih.gov/books/NBK279688/)).<br>
+__NCBI query and retrieval options__:<br>
+A contact email address must be provided using the `-e` flag; this is so that NCBI have someone to notify in case the software causes problems for their server.<br>
 The `--taxonomyquery` and `--datequery` flags allow the NCBI query to be customised according to the source organism of the accession and the date the accession was first added to NCBI. Note that the taxonomy id associated with a given organism can be found through the [NCBI Taxonomy Browser](https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi). For example, the command below would retrieve _Klebsiella aerogenes_ plasmids, added since the start of 2017:<br>
 
-`order.py -e first.last@email.com -o output-directory -q '"Klebsiella aerogenes"[porgn:__txid548]' -d '"2017/01/01"[PDAT] : "3000"[PDAT]'`
+`order.py -e first.last@email.com -o output-directory -taxonomyquery '"Klebsiella aerogenes"[porgn:__txid548]' -datequery '"2017/01/01"[PDAT] : "3000"[PDAT]'`
 
 The `-s` flag specifies which NCBI source database(s) to include; by default both refseq and genbank databases will be included (`refseq_genbank`) but refseq only can be specified (`refseq`).<br>
-By default, the number of threads is 1, but multi-threading is recommended to reduce computing time (for BLAST searches); the number of threads to use is specified using the `-t` flag; the value must not exceed the number of threads available on your machine.<br>
+
+__Replicon typing and rMLST typing options__:<br>
+By default, the number of threads is 1, but multi-threading is recommended to reduce the computing time of the BLAST searches; the number of threads to use is specified using the `-t` flag; the value must not exceed the number of threads available on your machine.<br>
+The `--typing` flag is applicable if the `--inhousesequences` flag is provided. By default both replicon and rMLST typing will be conducted on in-house sequences, but a user can specify only `replicon` typing or only `rmlst` typing. For accessions retrieved from NCBI, both replicon and rMLST typing are performed since this helps to distinguish plasmids from chromosomal sequence and chromids.<br>
+`--enterobacdbpath` and `--gramposdbpath` flags can be provided with paths to your own PlasmidFinder enterobacteriaceae and gram_positive BLAST databases (created by running the `makeblastdb` command on the FASTA files using [command line BLAST](https://www.ncbi.nlm.nih.gov/books/NBK279688/)).<br>
+
+
+__Pipeline step options specifying starting and stopping points__:<br>
+If provided, the `--retrieveaccessionsonly` flag will stop the pipeline after `accessions_filtered.tsv` is produced (see [Output file](output-files) and [Background and methods](#background-and-methods)).<br>
+If provided, the `--retrievesequencesonly` flag will stop the pipeline after `accessions_filtered_deduplicated.fa` is produced.<br>
+If provided,the `--restartwithsequences` flag will re-start the pipeline from the point where `--retrievesequencesonly` stopped the pipeline. 
 The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions.<br>
-The `--retrieveaccessionsonly` flag outputs until `accessions_filtered.tsv` (see [Output file](output-files) and [Background and methods](#background-and-methods)).<br>
-The `--retrievesequencesonly` flag outputs until `accessions_filtered_deduplicated.fa`, but does not run the more time-consuming BLAST-based filtering.<br>
-As an example, if you wish to update an existing database with more recent accessions, you could run bacterialBercow with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of bacterialBercow by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.<br>
-The `--sequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and rMLST typing.<br>
-The `--typing` flag is applicable if the `--sequences` flag is provided. By default both replicon and rMLST typing will be conducted on in-house sequences, but a user can specify only `replicon` typing or only `rmlst` typing. For accessions retrieved from NCBI, both replicon and rMLST typing are performed since this helps to distinguish plasmids from chromosomal sequence and chromids. 
+The `--inhousesequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and rMLST typing.<br>
+<br>
+__Example 1__: you wish to update an existing database with more recent accessions:<br>
+You could run bacterialBercow with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of bacterialBercow by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.<br>
+__Example 2__: you have access to a computer cluster which can be run with lots of `--threads` but for security reasons, the HTTPS protocol (required for accessing data from NCBI) is not permitted:<br>
+You could run bacterialBercow in two stages. First, on your own computer, run bacterialBercow with the `--retrievesequencesonly` flag. Then, with the same output directory (`-o` flag) specified, run the typing stage of the pipeline on your computer cluster by providing the `--restartwithsequences` flag along with lots of `--threads`.
+
 
 
 # Output files
@@ -138,7 +151,7 @@ plasmids.fa		     	    | plasmid sequences
 plasmids.tsv		     	    | information on plasmid sequences including replicon typing
 nonplasmids.tsv			    | information on non-plasmid sequences including replicon typing and rMLST typing
 
-The below table shows outputs from running the pipeline with the `--sequences` flag provided.
+The below table shows outputs from running the pipeline with the `--inhousesequences` flag provided.
 
 File/Directory            	    | Description
 ----------------------------------- | --------------------------------------------------------------------------------------------- 
