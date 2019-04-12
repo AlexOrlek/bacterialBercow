@@ -170,7 +170,7 @@ for seq, values in plasmiddict.iteritems():
         else:
             sameowner='missing data'
 
-        f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(refseqaccessions),','.join(genbankaccessions),','.join(biosamples),','.join(names),','.join(owners),','.join(biosamplesunique),','.join(namesunique),','.join(ownersunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),len(ownersuniquenonmissing),samebiosample,samename,sameowner))
+        f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%('|'.join(accessions),'|'.join(refseqaccessions),'|'.join(genbankaccessions),'|'.join(biosamples),'|'.join(names),'|'.join(owners),'|'.join(biosamplesunique),'|'.join(namesunique),'|'.join(ownersunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),len(ownersuniquenonmissing),samebiosample,samename,sameowner))
         #if len(groupsset)>1:
         #    f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(refseqaccessions),','.join(genbankaccessions),','.join(biosamples),','.join(names),','.join(biosamplesunique),','.join(namesunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),'different biosample and name'))
         #else:
