@@ -41,6 +41,8 @@ with open('%s/accessions_filtered_biosamples.tsv'%outdir) as f:
         biosample=data[1]
         if biosample in biosamplenamedict:
             name,owner=biosamplenamedict[biosample]
+            if name=='- -':
+                name='-'
         else:
             name='-'
             owner='-'
