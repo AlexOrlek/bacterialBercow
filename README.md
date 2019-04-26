@@ -107,7 +107,7 @@ The `--taxonomyquery` and `--datequery` flags allow the NCBI query to be customi
 
 `order.py -e first.last@email.com -o output-directory -taxonomyquery '"Klebsiella aerogenes"[porgn:__txid548]' -datequery '"2017/01/01"[PDAT] : "3000"[PDAT]'`
 
-The `-s` flag specifies which NCBI source database(s) to include; by default both refseq and genbank databases will be included (`refseq_genbank`) but refseq only can be specified (`refseq`).<br>
+The `-s` flag specifies which NCBI source database(s) to include; by default both Refseq and Genbank databases will be included (`refseq_genbank`) but Refseq only can be specified (`refseq`).<br>
 The `--deduplicationmethod` flag specifies how identical sequences should be deduplicated (see [Background and methods](#background-and-methods) for details).<br>
 
 
@@ -142,10 +142,10 @@ accessions.tsv			    | putative plasmid accessions retrieved from NCBI
 incompleteaccessions.tsv       	    | as above but not annotated as complete; these accessions are excluded
 accessions_filtered.tsv        	    | accessions remaining, after filtering based on accession title text
 excludedaccessions.tsv	     	    | accessions excluded, after filtering based on accession title text  
-accessions_filtered_dblinks.tsv     | biosample and bioproject accession ids associated with nucleotide accessions from accessions_filtered.tsv  
-accessions_filtered_metadata.tsv    | biosample metadata (submitter name and owner name) associated with biosample accessions
-accessions_filtered_refseq_gb.tsv   | refseq accessions and their cognate genbank accessions
-identicalaccessions.tsv		    | accessions with identical sequences, and information on associated metadata/bioproject accessions 
+accessions_filtered_dblinks.tsv     | BioSample and BioProject accession ids associated with nucleotide accessions from accessions_filtered.tsv  
+accessions_filtered_metadata.tsv    | BioSample metadata (submitter name and owner name) associated with BioSample accessions
+accessions_filtered_refseq_gb.tsv   | Refseq accessions and their cognate Genbank accessions
+identicalaccessions.tsv		    | accessions with identical sequences; corresponding submitter metadata and BioProject accession ids 
 accessions_filtered.fa              | sequences of accessions_filtered.tsv		    
 accessions_filtered_deduplicated.fa | sequences remaining after removal of duplicate sequences  
 plasmidfinder/                	    | directory containing outputs from BLASTing remaining sequences against plasmid replicon loci
@@ -175,7 +175,8 @@ For background information on curating NCBI plasmids see recent papers: [Orlek _
     * `all`: all duplicate sequences are filtered, leaving only one representative sequence.
     * `bioproject`: sequences are deduplicated if they share the same BioSample accession id, and the same BioProject accession id (default method).
     * `submitter`: sequences are deduplicated if they share the same BioSample accession id, and the same submitter metadata (submitter contact name and submitter affiliation name, from the [BioSample "Owner"](https://www.ncbi.nlm.nih.gov/books/NBK169436/) field)
-The aim of the `bioproject` and `submitter` methods is to allow for interesting duplicates to be retained - identical plasmids from distinct samples and sequencing projects, that may represent transmission of a conserved plasmid. Nucleotide accessions originating from the same biological sample should share the same BioSample accession; nucleotide accessions originating from the same sequencing project should share the same primary BioProject id ([Pruitt 2011](https://www.ncbi.nlm.nih.gov/books/NBK54015/), [Barrett 2012](https://www.ncbi.nlm.nih.gov/pubmed/22139929), [Benson 2013](https://academic.oup.com/nar/article/41/D1/D36/1068219)). However, in Refseq, higher-level primary BioProject accessions [can be created by NCBI staff](https://www.ncbi.nlm.nih.gov/bioproject/docs/faq/#what-is-project-type), e.g. [PRJNA224116](https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA224116). This breaks the correspondence between Refseq BioProject accession and sequencing project; therefore, for Refseq accessions the original BioProject accession id is retrieved via the cognate Genbank accession.    
+    
+    The aim of the `bioproject` and `submitter` methods is to allow for interesting duplicates to be retained - identical plasmids from distinct samples and sequencing projects, that may represent transmission of a conserved plasmid. Nucleotide accessions originating from the same biological sample should share the same BioSample accession; nucleotide accessions originating from the same sequencing project should share the same primary BioProject id ([Pruitt 2011](https://www.ncbi.nlm.nih.gov/books/NBK54015/), [Barrett 2012](https://www.ncbi.nlm.nih.gov/pubmed/22139929), [Benson 2013](https://academic.oup.com/nar/article/41/D1/D36/1068219)). However, in Refseq, higher-level primary BioProject accessions [can be created by NCBI staff](https://www.ncbi.nlm.nih.gov/bioproject/docs/faq/#what-is-project-type), e.g. [PRJNA224116](https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA224116). This breaks the correspondence between Refseq BioProject accession and sequencing project; therefore, for Refseq accessions the original BioProject accession id is retrieved via the cognate Genbank accession.    
 4. The remaining sequences are BLASTed again the PlasmidFinder replicon database and the rMLST database.
 5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file (although see the [FAQ](faq) for the potential limitations of this approach). Accessions with rMLST loci detected are recorded; these could be chromid or chromosomal sequences.
 
@@ -198,7 +199,7 @@ I previously published a similar method for plasmid curation ([Orlek _et al._ 20
 
 # Acknowledgements
 
-I am grateful to Dr Keith Jolley for informing me about programmatic access to the rMLST database ((Jolley _et al._ 2017](https://academic.oup.com/database/article/doi/10.1093/database/bax060/4079979)) and for pointing me towards [ConFindr](https://olc-bioinformatics.github.io/ConFindr/) software, which implements programmatic access. The `database_setup.py` executable used in bacterialBercow is based on a script from ConFindr.
+I am grateful to Dr Keith Jolley for informing me about programmatic access to the rMLST database ([Jolley _et al._ 2017](https://academic.oup.com/database/article/doi/10.1093/database/bax060/4079979)) and for pointing me towards [ConFindr](https://olc-bioinformatics.github.io/ConFindr/) software, which implements programmatic access. The `database_setup.py` executable used in bacterialBercow is based on a script from ConFindr.
 
 
 # License
