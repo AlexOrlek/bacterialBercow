@@ -1,0 +1,124 @@
+#COMMAND FOR RETRIEVING BACTERIAL PLASMIDS
+#original run (metadatadeduplication)
+nohup python order.py -e alex.orlek@wolfson.ox.ac.uk -o TESTING/bacterialplasmids --retrievesequencesonly >TESTING/std.out_bacterialplasmids 2>TESTING/std.err_bacterialplasmids & 
+#bioproject deduplication
+nohup python order.py -e alex.orlek@wolfson.ox.ac.uk -o TESTING/bacterialplasmids --retrievesequencesonly >TESTING/std.out_bacterialplasmids 2>TESTING/std.err_bacterialplasmids &
+
+
+N.B updated deduplicate.py (fixed bug that meant that accessions with missing data could be included in deduplicate fasta; used '|' as delimter); re-ran deduplicate.py script (std.out/err2). N.B there are 31 accessions that wouldbe included if missing data counted as different metadata: in /OLD:
+diff <(cat accessions_filtered_deduplicated.txt | sort) <(cat ./../accessions_filtered_deduplicated.txt | sort) | grep '<' | wc -l
+
+cat accessions_filtered_deduplicated.fa | grep '>' | wc -l    16194
+cat accessions_filtered.tsv | wc -l    29567 i.e. 29566 accessions
+
+nohup python order.py -o TESTING/bacterialplasmids --restartwithsequences -t 20 >TESTING/std.out3_bacterialplasmids 2>TESTING/std.err3_bacterialplasmids &
+
+N.B bug with finalfilter.py (sys.exit() due to novel probe - now not calling sys.exit())
+
+nohup python finalfilter.py databases/rmlstalleles TESTING/bacterialplasmids ncbi enterobacteriaceae gram_positive >TESTING/std.out4_bacterialplasmids 2>TESTING/std.err4_bacterialplasmids &
+
+cat plasmids.fa | grep '>' | wc -l    16038
+cat nonplasmidaccessions.tsv | wc -l    157 i.e. 156 non-plasmids
+
+
+
+
+#FINAL TESTING
+python order.py -e alex.orlek@wolfson.ox.ac.uk --taxonomyquery '"Klebsiella aerogenes"[porgn:__txid548]' -o TESTING/out_kaerogenes_refseq_genbank --retrievesequencesonly
+python order.py -o TESTING/out_kaerogenes_refseq_genbank -t 8 --restartwithsequences
+python order.py -o TESTING/out_kaerogenes_sequences -t 8 --inhousesequences TESTING/out_kaerogenes_refseq_genbank/accessions_filtered_deduplicated.fa #should get same results
+
+
+#Problems
+ERROR in count output: Search Backend failed: read request has timed out. - error when trying to download bacterial plasmids...have now added additional sleep commands and have set default efetch batch size to 200 (https://rdrr.io/github/gschofl/rentrez/man/efetch.batch.html)
+
+
+#Problems with distinguishing plasmids / chromosomes / chromids ; future plans:
+rMLST loci (encoding ribosomal proteins) are just one set of core genes (see Gil 2004: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC515251/). A full set of rMLST loci indicates a complete chromosome, but a chromid may have other core genes not encompassed by the rMLST loci.
+In future, would want to incorporate MLST loci (as I did before in scripts/finalgenomes folder!); and for both rmlst and mlst, would want to use thinned down sets rather than all alleles.
+
+N.B limitation of de Cenzo et al decision tree is that it uses genome size cutoff to distinguish plasmids from megaplasmids and other sequences, and assumes largest contig is chromosome - but this assumes a complete assembly (this may be discussed in Supplmentary where they mention they discuss the limitations). They say annotation approach would take too long for large-scale analysis which may be true, but would still be useful for in-house sequencing projects.
+
+To do: could change tagline; decided not to include resistance typing since methods are more in flux compared to plasmidfinder/rmlst
+
+#
+
+Results from after running fixed deduplicate.py:
+-don't include duplicates with different metadata by default because you need to look in detal before deciding whether they could represent natural transmission e.g. Bacillus thuringiensis plasmids are common among the duplicates with different metadata - but could reflect abundance of homogenous commercial strain plasmids
+-include owner in analysis - there's at least one case of different submitter same owner
+-there are potentially very interesting cases:
+e.g. https://www.ncbi.nlm.nih.gov/nuccore/NZ_CP016508.1; https://www.ncbi.nlm.nih.gov/nuccore/NZ_CP016523.1  #salmonella heidelberg plasmid isolated in livestock and human
+e.g.2 https://www.ncbi.nlm.nih.gov/nuccore/NZ_CP025496.1; https://www.ncbi.nlm.nih.gov/nuccore/CP025490.1  #recurrent salmonella plasmid in military serviceman
+
+
+
+#Problems:
+1. rmlst is taking too long - increase the word size from default 11 to 20-30 https://www.sciencedirect.com/science/article/pii/S0960982201006224 uses 20 for stringency. Given pid threshold 30 should be fine. megablast word size is 28 *** DONE
+
+2. problem with names not being extracted properly DONE
+
+#COMMAND:
+nohup python curateplasmids.py -e alex.orlek@wolfson.ox.ac.uk -o TESTING/bacterialplasmids -t 8 >TESTING/std.out_bacterialplasmids 2>TESTING/std.err_bacterialplasmids & 
+
+###Initial results after downloading 2nd April:
+
+#1. duplicateaccessions.tsv:
+The create date is not helpful; there's a problem of accessions with missing genbank biosample but included refseq biosample being treated as different
+
+There may be cases of genuine conserved plasmids produced from hybrid assembly (BUT maybe the authors are just cheating and copy pasting the sequence - looks likely for the 2nd example at least?)...
+e.g. NZ_CP023803.1,NZ_CP023793.1,NZ_CP023788.1,NZ_CP023807.1,NZ_CP023783.1,CP023807.1,CP023803.1,CP023793.1,CP023788.1,CP023783.1
+plasmid 4 from Chacko 2018 https://aac.asm.org/content/62/4/e02007-17.long
+
+e.g. NC_017151.1,NC_017135.1,NC_017147.1,NC_017127.1,NC_017110.1,NC_017119.1,NC_017114.1,NC_013212.1  https://www.ncbi.nlm.nih.gov/pubmed/19638423
+
+There seem to be cases of the same plasmids being associaed with different biosample erroneously...
+e.g. NZ_CP018678.1,NZ_CP007713.1 https://www.nature.com/articles/srep08643
+
+Solution: only allow if author is different?
+https://www.ncbi.nlm.nih.gov/biosample/docs/packages/  ##biosample pacakges - N.B neither author (First Last) nor lab group (Owner) are required fields; lab group is probably better/more used? BUT for large groups e.g. NIH author is more sensible option.
+
+
+#2. Problem with rmlst typing - rmlstloci.txt is blank! + need to make rmlstloci.txt outside database_setup script DONE
+
+
+
+To do:
+allow incomplete accessions using an argparse option - this is uneccessary - could just manually combine and run with --accessions
+add rmlst typing?
+decide how to handle chromids and linear plasmids...
+-both Harrison 2011 and diCenzo 2017 support the method of using rmlst as a way to filter chromids / and support the idea that chromids are distinct from plasmids, and less likely to be transmitting resistance
+-From Shintani: "most linear plasmids have consevered "telomeres" containing inverted repeat sequences...". But there's no tool for identifying linear plasmids at the moment? 
+
+add to readme FAQ: when you do download now, how many plasmids / chromids / filtered?
+
+!whatever reply from Kim Pruitt (if at all), you should include Genbank accessions BUT rather than simply deduplicating based on exact sequence identity, deduplicate based on exact sequence identity and biosample to allow rare case of identical sequence but different occurrence (is this too rare to be plausible?) - maybe not for short plasmids. !when you run the deduplication approach, check whether they all have same biosample id
+
+!one of the big advantages of CuratePlasmids over PLSDB is going to be when I implement the filtering of similar sequences based on bioproject id. - getbioproject ids along with biosample ids - this is difficult to do with a simple edirect command - could use xml handling (take code from getNCBImetadata) !! use ProjectId - this retrives biosample number. BUT bioproject is not reliable because refseq bioprojects are generic.
+
+make taxonomyquery and datequery flags more intuitive - not straightforward to work with taxids; can retrieve:
+echo "MG288682.1" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -element TaxId
+!not sure how to make more intuitive - leave as is for now
+
+TESTING
+python curateplasmids.py -e alex.orlek@wolfson.ox.ac.uk -q '"Klebsiella aerogenes"[porgn:__txid548]' -o TESTING/out_kaerogenes_refseq_genbank -t 5 --retrievesequencesonly
+
+Bug:
+curateplasmids.py -e alex.orlek@wolfson.ox.ac.uk -q '"Klebsiella aerogenes"[porgn:__txid548]' -o out_kaerogenes
+local testing shows problem with pythonmods not being in pythonpath - what about my other repos?
+
+Note: don't need to add pythonpath https://users-cs.au.dk/chili/PBI/pythonpath.html
+
+###database_setup.py
+have emailed Keith Jolley to check whether I'm allowed to include the rmlst database in a git repo - not allowed
+
+using confindr scripts to download
+
+
+run executable iwth python3 then enter verification code when requested
+
+2019-03-28 15:46:06  Downloading BACT000065... 
+  2019-03-28 15:46:13  Downloading rMLST profiles... 
+  2019-03-28 15:46:13  Combining rMLST files... 
+  2019-03-28 15:47:01  Assigning alleles to genera... 
+  2019-03-28 15:49:06  Downloading mash refseq sketch... 
+  2019-03-28 15:49:07  Done downloading ConFindr databases! 
