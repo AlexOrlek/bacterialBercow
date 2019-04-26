@@ -11,7 +11,7 @@ outdir=${3}
 accessions=($(cut -f 1 "${outdir}/accessions_filtered.tsv" | sed '1d')) #first column with header removed
 
 > ${outdir}/accessions_filtered.fa
-echo -e 'Accession\tBioSample' > ${outdir}/accessions_filtered_biosamples.tsv
+echo -e 'Accession\tBioSample\tBioProject' > ${outdir}/accessions_filtered_dblinks.tsv
 echo -e 'Accession\tName\tOwner' > ${outdir}/accessions_filtered_metadata.tsv
 
 econtact -email ${emailaddress} -tool plasmiddownload
@@ -20,7 +20,7 @@ econtact -email ${emailaddress} -tool plasmiddownload
 len=${#accessions[@]}
 chunklen=${batchsize}
 
-
+#download sequences as well as biosample,bioproject,owner metadata
 for i in $(eval echo {0..$len..$chunklen})
 do
     sum=$(( ($i + $chunklen) + 1 ))
@@ -32,7 +32,7 @@ do
         chunkedaccessions=${accessions[@]:$i:$chunklen} #slice accessions array
 	chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
 	#echo "$chunkedaccessionsinput"	
-	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion BioSample >> ${outdir}/accessions_filtered_biosamples.tsv
+	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion BioSample ProjectId >> ${outdir}/accessions_filtered_dblinks.tsv
 	sleep 1
 	#echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | elink -target biosample | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element Accession First Last >> ${outdir}/accessions_filtered_metadata.tsv
 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | elink -target biosample | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -first -VAR1 Accession -VAR2 First -VAR3 Last -block Owner -def "-" -sep " " -element "&VAR1" "&VAR2","&VAR3" -first Name >> ${outdir}/accessions_filtered_metadata.tsv
@@ -44,7 +44,7 @@ do
         chunkedaccessions=${accessions[@]:$i:$chunklen} #slice accessions array                                                           
         chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
 	#echo "$chunkedaccessionsinput"
-	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion BioSample >> ${outdir}/accessions_filtered_biosamples.tsv
+	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion BioSample ProjectId >> ${outdir}/accessions_filtered_dblinks.tsv
 	sleep 1
 	#echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | elink -target biosample | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element Accession First Last >> ${outdir}/accessions_filtered_metadata.tsv
 	echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | elink -target biosample | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -first -VAR1 Accession -VAR2 First -VAR3 Last -block Owner -def "-" -sep " " -element "&VAR1" "&VAR2","&VAR3" -first Name >> ${outdir}/accessions_filtered_metadata.tsv
@@ -54,7 +54,50 @@ do
     fi
 done
 
-echo 'finished sequence download'
+
+echo 'finished sequence download, and metadata retrieval'
+
+#for refseq accessions get the cognate genbank accession (because I'll be using genbank bioproject ids)
+
+refseqaccessions=()
+for accession in ${accessions[@]}; do
+    if [[ $accession == *_* ]]; then
+	refseqaccessions+=($accession)
+    fi
+done
+
+echo -e 'RefseqAccession\tCognateGenbankAccession' > ${outdir}/accessions_filtered_refseq_gb.tsv
+
+if [ ${#refseqaccessions[@]} -gt 0 ]; then
+    len=${#refseqaccessions[@]}
+    chunklen=${batchsize}
+    #get refseq/genbank cognates
+    for i in $(eval echo {0..$len..$chunklen})
+    do
+	sum=$(( ($i + $chunklen) + 1 ))
+	if [ $i -eq $len ]; then
+            break
+	elif [ $sum -eq $len ]; then
+            echo $i
+            chunklen=$(( $chunklen + 1 ))
+            chunkedaccessions=${refseqaccessions[@]:$i:$chunklen} #slice accessions array
+	    chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
+	    echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion AssemblyAcc >> ${outdir}/accessions_filtered_refseq_gb.tsv
+	    sleep 1
+	    break
+	else
+            echo $i
+            chunkedaccessions=${refseqaccessions[@]:$i:$chunklen} #slice accessions array                                                           
+            chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
+	    	    echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion AssemblyAcc >> ${outdir}/accessions_filtered_refseq_gb.tsv
+	    sleep 1
+	fi
+    done
+fi
+
+
+
+echo 'finished retrieving cognate genbank accession ids for refseq accessions'
 
 
 #OLD CODE - don't need both person's name and owner?

@@ -31,14 +31,19 @@ with open('%s/accessions_filtered_metadata.tsv'%outdir) as f:
 
 #print biosamplenamedict["SAMN05717715"]
 #sys.exit()
+nuclaccessions=[]
 metadatadict={} #accession : [biosample accession, name]
-with open('%s/accessions_filtered_biosamples.tsv'%outdir) as f:
+bioprojectdict={}
+bioprojectdict_noaccessionversion={}
+with open('%s/accessions_filtered_dblinks.tsv'%outdir) as f:
     for indx, line in enumerate(f):
         if indx==0:
             continue
         data=line.strip().split('\t')
         accession=data[0]
         biosample=data[1]
+        bioproject=data[2]
+        nuclaccessions.append(accession)
         if biosample in biosamplenamedict:
             name,owner=biosamplenamedict[biosample]
             if name=='- -':
@@ -47,9 +52,37 @@ with open('%s/accessions_filtered_biosamples.tsv'%outdir) as f:
             name='-'
             owner='-'
         metadatadict[accession]=[biosample,name,owner]
+        bioprojectdict[accession]=bioproject
+        accession_noversion=accession.split('.')[0]
+        bioprojectdict_noaccessionversion[accession_noversion]=bioproject
 
 #print metadatadict["NZ_CP017408.1"]
 #sys.exit()        
+
+
+#get dictionary of refseq:genbank accession ids and use to edit accession:bioprojectid dict
+refseqgenbankdict={}
+with open('%s/accessions_filtered_refseq_gb.tsv'%outdir) as f:
+    for indx, line in enumerate(f):
+        if indx==0:
+            continue
+        data=line.strip().split('\t')
+        refseqaccession=data[0]
+        genbankaccession=data[1]
+        refseqgenbankdict[refseqaccession]=genbankaccession #remember that refseq accession is in "accession.version" format whereas genbank is in "accession" format
+
+
+
+for accession in nuclaccessions:
+    #if accession is refseq, edit the project id in bioprojectdict
+    if '_' in accession: #refseq accession
+        gbaccession=refseqgenbankdict[accession]
+        gbbioproject=bioprojectdict_noaccessionversion[gbaccession]
+        bioprojectdict[accession]=gbbioproject
+        
+#for accession in sorted(nuclaccessions):
+#    print accession,bioprojectdict[accession]
+#sys.exit()
 
 ###testing - if all 3 metadata items are changed for one accession, both accessions written to fasta
 #metadatadict["NZ_CP026758.1"][0]='testSAMN'
@@ -70,11 +103,12 @@ for indx, seq_record in enumerate(SeqIO.parse(fileObj,"fasta")):
         accessiontype='genbank'
     sequence=str(seq_record.seq)
     biosample,name,owner=metadatadict[accession]
+    bioproject=bioprojectdict[accession]
     if sequence in plasmiddict:
-        plasmiddict[sequence].append([accession,accessiontype,biosample,name,owner])
+        plasmiddict[sequence].append([accession,accessiontype,biosample,name,owner,bioproject])
     else:
         plasmiddict[sequence]=[]
-        plasmiddict[sequence].append([accession,accessiontype,biosample,name,owner])
+        plasmiddict[sequence].append([accession,accessiontype,biosample,name,owner,bioproject])
 
 
 
@@ -85,7 +119,7 @@ for indx, seq_record in enumerate(SeqIO.parse(fileObj,"fasta")):
 deduplicatebymetadata=False #deduplicate all identical accessions
 f2=open('%s/accessions_filtered_deduplicated.fa'%outdir,'w')
 f3=open('%s/identicalaccessions.tsv'%outdir,'w')
-f3.write('Accessions\tRefseq_Accessions\tGenbank_Accessions\tBiosamples\tSubmitter_Names\tOwners\tUnique_Biosamples\tUnique_Names\tUnique_Owners\tNum_Accessions\tNum_Refseq_Accessions\tNum_Genbank_Accessions\tNum_Unique_Biosamples\tNum_Unique_Names\tNum_Unique_Owners\tSame_Biosample\tSame_Submitter_Name\tSame_Owner\n')
+f3.write('Accessions\tRefseq_Accessions\tGenbank_Accessions\tBiosamples\tSubmitter_Names\tOwners\tBioProjects\tUnique_Biosamples\tUnique_Names\tUnique_Owners\tUnique_BioProjects\tNum_Accessions\tNum_Refseq_Accessions\tNum_Genbank_Accessions\tNum_Unique_Biosamples\tNum_Unique_Names\tNum_Unique_Owners\tNum_Unique_BioProjects\tSame_Biosample\tSame_Submitter_Name\tSame_Owner\tSame_BioProject\tAccessions_Deduplicatedby_Metadata\tAccessions_Deduplicatedby_BioProject\n')
 for seq, values in plasmiddict.iteritems():
     if len(values)>1: #multiple accessions for a given sequence
         accessions=map(operator.itemgetter(0), values)
@@ -93,20 +127,25 @@ for seq, values in plasmiddict.iteritems():
         biosamples=map(operator.itemgetter(2), values)
         names=map(operator.itemgetter(3), values)
         owners=map(operator.itemgetter(4), values)
+        bioprojects=map(operator.itemgetter(5), values)
         #group accessions by metadata - if they have either the same biosample accession or the same name (ignoring missing info), they are assigned the same group
         #problem: may have different biosample and name not provided - this would lead to different group but maybe should be more leniant and require both to be different? Yes - name / lab group info is the right idea - just need to make sure it's there (lab group would be better?)
         #reason for both requiring to be different: could have same lab group but copy pasting sequence with different biosample names; could have same biosample being sequenced / used by different lab groups.
         biosamplelist=[]
         namelist=[]
         ownerlist=[]
-        groups=[]
-        for biosample,name,owner in zip(biosamples,names,owners):
+        bioprojectlist=[]
+        metadatagroups=[]
+        bioprojectgroups=[]
+        for biosample,name,owner,bioproject in zip(biosamples,names,owners,bioprojects):
             if biosample not in biosamplelist and biosample!='-':
                 biosamplelist.append(biosample)
             if name not in namelist and name!='-':
                 namelist.append(name)
             if owner not in ownerlist and owner!='-':
                 ownerlist.append(owner)
+            if bioproject not in bioprojectlist and bioproject!='-':
+                bioprojectlist.append(bioproject)
             if biosample=='-':
                 biosampleindx='NA'
             else:
@@ -119,21 +158,35 @@ for seq, values in plasmiddict.iteritems():
                 ownerindx='NA'
             else:
                 ownerindx=[indx for indx,o in enumerate(ownerlist) if o==owner][0]
-            #print biosampleindx,nameindx
-            indices=[]
-            if biosampleindx!='NA':
-                indices.append(biosampleindx)
-            if nameindx!='NA':
-                indices.append(nameindx)
-            if ownerindx!='NA':
-                indices.append(ownerindx)
-            if len(indices)==3: #i.e. all 3 fields present
-                group=min(indices)
+            if bioproject=='-':
+                bioprojectindx='NA'
             else:
-                group=0
-            groups.append(group)
-        groupsset=set(groups)
-        #print groupsset, biosamples,names,len(groupsset)
+                bioprojectindx=[indx for indx,p in enumerate(bioprojectlist) if p==bioproject][0]
+            #print biosampleindx,nameindx
+            metadataindices=[]
+            bioprojectindices=[]
+            if biosampleindx!='NA':
+                metadataindices.append(biosampleindx)
+                bioprojectindices.append(biosampleindx)
+            if nameindx!='NA':
+                metadataindices.append(nameindx)
+            if ownerindx!='NA':
+                metadataindices.append(ownerindx)
+            if bioprojectindx!='NA':
+                bioprojectindices.append(bioprojectindx)
+            if len(metadataindices)==3: #i.e. all 3 fields present
+                metadatagroup=min(metadataindices)
+            else:
+                metadatagroup=0
+            metadatagroups.append(metadatagroup)
+            if len(bioprojectindices)==2: #i.e. all 2 fields present
+                bioprojectgroup=min(bioprojectindices)
+            else:
+                bioprojectgroup=0
+            bioprojectgroups.append(bioprojectgroup)
+        metadatagroupsset=set(metadatagroups)
+        bioprojectgroupsset=set(bioprojectgroups)
+        #print metadatagroupsset, biosamples,names,len(metadatagroupsset)
         refseqaccessions=[a for a in accessions if '_' in a]
         genbankaccessions=[a for a in accessions if '_' not in a]
         if len(refseqaccessions)==0:
@@ -143,9 +196,11 @@ for seq, values in plasmiddict.iteritems():
         biosamplesunique=unique(biosamples)
         namesunique=unique(names)
         ownersunique=unique(owners)
+        bioprojectsunique=unique(bioprojects)
         biosamplesuniquenonmissing=[i for i in biosamplesunique if i!='-']
         namesuniquenonmissing=[i for i in namesunique if i!='-']
         ownersuniquenonmissing=[i for i in ownersunique if i!='-']
+        bioprojectsuniquenonmissing=[i for i in bioprojectsunique if i!='-']
         if len(biosamplesuniquenonmissing)==len(biosamplesunique):
             if len(biosamplesuniquenonmissing)==1:
                 samebiosample='TRUE'
@@ -170,30 +225,60 @@ for seq, values in plasmiddict.iteritems():
         else:
             sameowner='missing data'
 
-        f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%('|'.join(accessions),'|'.join(refseqaccessions),'|'.join(genbankaccessions),'|'.join(biosamples),'|'.join(names),'|'.join(owners),'|'.join(biosamplesunique),'|'.join(namesunique),'|'.join(ownersunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),len(ownersuniquenonmissing),samebiosample,samename,sameowner))
-        #if len(groupsset)>1:
+        if len(bioprojectsuniquenonmissing)==len(bioprojectsunique):
+            if len(bioprojectsuniquenonmissing)==1:
+                samebioproject='TRUE'
+            else:
+                samebioproject='FALSE'
+        else:
+            samebioproject='missing data'
+
+        #f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%('|'.join(accessions),'|'.join(refseqaccessions),'|'.join(genbankaccessions),'|'.join(biosamples),'|'.join(names),'|'.join(owners),'|'.join(bioprojects),'|'.join(biosamplesunique),'|'.join(namesunique),'|'.join(ownersunique),'|'.join(bioprojectsunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),len(ownersuniquenonmissing),len(bioprojectsuniquenonmissing),samebiosample,samename,sameowner,samebioproject))
+        #if len(metadatagroupsset)>1:
         #    f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(refseqaccessions),','.join(genbankaccessions),','.join(biosamples),','.join(names),','.join(biosamplesunique),','.join(namesunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),'different biosample and name'))
         #else:
         #    f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(refseqaccessions),','.join(genbankaccessions),','.join(biosamples),','.join(names),','.join(biosamplesunique),','.join(namesunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),'same biosample or name'))
-        if deduplicationmethod=="metadata": #choose one sequence per metadata group
-            for group in groupsset:
-                indices=[indx for indx,g in enumerate(groups) if g==group] #get all indices that equal group
-                if len(indices)>1: #multiple accessions for a given metadata group - deduplicate by selecting refseq if available
-                    myrefseqindices=[indx for indx,t in enumerate(accessiontypes) if indx in indices and t=='refseq']
-                    if len(myrefseqindices)>0: #if there's at least 1 refseq, select the first refseq accession
-                        accession=accessions[myrefseqindices[0]]
-                    else: #if there's only genbank, select the first genbank
-                        accession=accessions[indices[0]]
-                else: #1 accession for a given metadata group; select accession
+        metadatadeduplicatedaccessions=[]
+        bioprojectdeduplicatedaccessions=[]
+        for group in metadatagroupsset:
+            indices=[indx for indx,g in enumerate(metadatagroups) if g==group] #get all indices that equal group
+            if len(indices)>1: #multiple accessions for a given metadata group - deduplicate by selecting refseq if available
+                myrefseqindices=[indx for indx,t in enumerate(accessiontypes) if indx in indices and t=='refseq']
+                if len(myrefseqindices)>0: #if there's at least 1 refseq, select the first refseq accession
+                    accession=accessions[myrefseqindices[0]]
+                else: #if there's only genbank, select the first genbank
                     accession=accessions[indices[0]]
+            else: #1 accession for a given metadata group; select accession
+                accession=accessions[indices[0]]
+            metadatadeduplicatedaccessions.append(accession)
+            if deduplicationmethod=="submitter": #choose one sequence per submitter metadata group
                 f2.write('>%s\n'%accession)
                 f2.write('%s\n'%seq)
-        else: #choose one sequence across all duplicates irrespective of whether or not metadata is shared
-            myrefseqindices=[indx for indx,t in enumerate(accessiontypes) if indx in indices and t=='refseq']
+        for group in bioprojectgroupsset:
+            indices=[indx for indx,g in enumerate(bioprojectgroups) if g==group] #get all indices that equal group
+            if len(indices)>1: #multiple accessions for a given bioproject group - deduplicate by selecting refseq if available
+                myrefseqindices=[indx for indx,t in enumerate(accessiontypes) if indx in indices and t=='refseq']
+                if len(myrefseqindices)>0: #if there's at least 1 refseq, select the first refseq accession
+                    accession=accessions[myrefseqindices[0]]
+                else: #if there's only genbank, select the first genbank
+                    accession=accessions[indices[0]]
+            else: #1 accession for a given bioproject group; select accession
+                accession=accessions[indices[0]]
+            bioprojectdeduplicatedaccessions.append(accession)
+            if deduplicationmethod=="bioproject": #choose one sequence per bioproject group
+                f2.write('>%s\n'%accession)
+                f2.write('%s\n'%seq)
+                
+        if deduplicationmethod=="all": #choose one sequence across all duplicates irrespective of whether or not metadata/bioproject is shared
+            myrefseqindices=[indx for indx,t in enumerate(accessiontypes) if t=='refseq']
             if len(myrefseqindices)>0: #if there's at least 1 refseq, select the first refseq accession
                 accession=accessions[myrefseqindices[0]]
             else: #if there's only genbank, select the first genbank
                 accession=accessions[0]
+            f2.write('>%s\n'%accession)
+            f2.write('%s\n'%seq)
+
+        f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%('|'.join(accessions),'|'.join(refseqaccessions),'|'.join(genbankaccessions),'|'.join(biosamples),'|'.join(names),'|'.join(owners),'|'.join(bioprojects),'|'.join(biosamplesunique),'|'.join(namesunique),'|'.join(ownersunique),'|'.join(bioprojectsunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),len(ownersuniquenonmissing),len(bioprojectsuniquenonmissing),samebiosample,samename,sameowner,samebioproject,'|'.join(metadatadeduplicatedaccessions),'|'.join(bioprojectdeduplicatedaccessions)))
     else: #1 accession for a given sequence
         accession=values[0][0]
         f2.write('>%s\n'%accession)

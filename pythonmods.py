@@ -319,7 +319,7 @@ def mlstfilter(blastoutput,finalfile,sortedfile,sourcedir,idtable=False, pidthre
 
 def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
     """takes a list of probetypes; outputs inctypes, incfamilies, inclength"""
-    import sys
+    import sys,re
     inclength=str(len(inctype_probes))
     nestinctypes=[] #inc type
     nestinctypes_concise=[] #inc family
@@ -328,16 +328,23 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
             probe=str(probe).strip()
             probesplit=probe.split('_')
             if probe.startswith('Col'):
-                nestinctypes.append(probesplit[0]) #just including all col type plasmids as probe_ids
+                nestinctypes.append(probesplit[0]) #just including all col type plasmids as probe_id prefixes
                 nestinctypes_concise.append('Col')
             elif probe.startswith('IncA/C'):
                 if probe.startswith('IncA/C_1'):
                     nestinctypes.append('IncA/C1')
+                elif probe.startswith('IncA/C2_1'):
+                    nestinctypes.append('IncA/C2')
                 else:
-                    nestinctypes.append(probesplit[0]) #IncA/C2
+                    nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncA/C probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncA/C')
             elif probe.startswith('IncB/O/K/Z'):
-                nestinctypes.append(str(probesplit[0])+str(probesplit[1]))
+                if re.match('IncB/O/K/Z_[0-9]+_',probe):               
+                    nestinctypes.append(str(probesplit[0])+str(probesplit[1]))
+                else:
+                    nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncIncB/O/K/Z probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncB/O/K/Z')
             elif probe.startswith('IncF'):
                 if probe.startswith('IncFII') or probe.startswith('IncFII('):
@@ -349,7 +356,8 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                 elif probe.startswith('IncFIC'):
                     nestinctypes.append('IncFIC')
                 else:
-                    print('{} {}'.format('IncF probe handling error', probe)); sys.exit()
+                    nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncF probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncF')
             elif probe.startswith('IncHI'):
                 if probe.startswith('IncHI1'):
@@ -357,92 +365,125 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                 elif probe.startswith('IncHI2'):
                     nestinctypes.append('IncHI2')
                 else:
-                    print('{} {}'.format('IncHI probe handling error', probe)); sys.exit()
+                    nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncHI probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncH')
             elif probe.startswith('IncI'):
                 if probe.startswith('IncI1'):
                     nestinctypes.append('IncI1')
                 elif probe.startswith('IncI2'):
                     nestinctypes.append('IncI2')
-                else:
-                    print('{} {}'.format('IncI probe handling error', probe)); sys.exit()
-                nestinctypes_concise.append('IncI')
-            elif probe.startswith('IncL/M'):
-                nestinctypes.append('IncL/M')
-                nestinctypes_concise.append('IncL/M')
-            elif probe.startswith('IncN'):
-                if probe.startswith('IncN_1'):
-                    nestinctypes.append('IncN1')
+                elif probe.startswith('IncI_Gamma_1') or probe.startswith('IncI_1_Gamma') or probe.startswith('IncI_gamma_1') or probe.startswith('IncI_1_gamma'):
+                    nestinctypes.append('IncI1-gamma')
+                elif probe.startswith('IncI_Alpha_1') or probe.startswith('IncI_1_Alpha') or probe.startswith('IncI_alpha_1') or probe.startswith('IncI_1_alpha'):
+                    nestinctypes.append('IncI1-alpha')
                 else:
                     nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncI probe could not be assigned a known replicon type', probe))
+                nestinctypes_concise.append('IncI')
+            elif probe.startswith('IncL/M'):
+                nestinctypes.append('IncL/M') #the IncL/M family isn't subdivided into replicon types in plasmidfinder 
+                nestinctypes_concise.append('IncL/M')
+            elif probe.startswith('IncN'):
+                if probe.startswith('IncN_1') or probe.startswith('IncN1'):
+                    nestinctypes.append('IncN1')
+                elif probe.startswith('IncN2'):
+                    nestinctypes.append('IncN2')
+                elif probe.startswith('IncN3'):
+                    nestinctypes.append('IncN3')
+                else:
+                    nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncN probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncN')
             elif probe.startswith('IncP') or probe.startswith('P1_alpha'):
                 if probe.startswith('P1_alpha'):
-                    nestinctypes.append('IncP-1alpha')
+                    nestinctypes.append('IncP1-alpha')
                 elif probe.startswith('IncP(Beta)'):
-                    nestinctypes.append('IncP-1beta')
-                elif probe.startswith('IncP(6)'):
+                    nestinctypes.append('IncP1-beta')
+                elif probe.startswith('IncP(6)') or probe.startswith('IncP6'):
                     nestinctypes.append('IncP6')
                 elif probe.startswith('IncP1'):
                     nestinctypes.append('IncP1')
-                elif probe.startswith('IncP6'):
-                    nestinctypes.append('IncP6')
                 else:
-                    print('{} {}'.format('IncP probe handling error', probe)); sys.exit()
+                    nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncP probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncP')
             elif probe.startswith('IncQ'):
-                nestinctypes.append(probesplit[0])
+                if probe.startswith('IncQ1'):
+                    nestinctypes.append('IncQ1')
+                elif probe.startswith('IncQ2'):
+                    nestinctypes.append('IncQ2')
+                else:
+                    nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncQ probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncQ')
             elif probe.startswith('IncR'):
-                nestinctypes.append(probesplit[0])
+                nestinctypes.append(probesplit[0]) #not subdivided into different replicon types in plasmidfinder
                 nestinctypes_concise.append('IncR')
             elif probe.startswith('IncT'):
-                nestinctypes.append(probesplit[0])
+                nestinctypes.append(probesplit[0]) #not subdivided into different replicon types in plasmidfinder
                 nestinctypes_concise.append('IncT')
             elif probe.startswith('IncU'):
-                nestinctypes.append(probesplit[0])
+                nestinctypes.append(probesplit[0]) #not subdivided into different replicon types in plasmidfinder
                 nestinctypes_concise.append('IncU')
             elif probe.startswith('IncW'):
-                nestinctypes.append(probesplit[0])
+                nestinctypes.append(probesplit[0]) #not subdivided into different replicon types in plasmidfinder
                 nestinctypes_concise.append('IncW')
             elif probe.startswith('IncX'):
                 if probe.startswith('IncX3('):
                     nestinctypes.append('IncX3')
+                elif re.match('IncX[0-9]+_',probe):
+                    nestinctypes.append(probesplit[0])
                 else:
                     nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncX probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncX')
-            elif probe.startswith('repA') or probe.startswith('Rep'): #these are recently added rep genes which don't fit with previous inc types                                                 
-                if probe.startswith('Rep_1_pKPC-2_CP011573'):
-                    nestinctypes.append('rep_CP011573')
-                    nestinctypes_concise.append('rep_CP011573')
-                elif probe.startswith('repA_1_pKPC-2_CP013325'):
-                    nestinctypes.append('repA_CP013325')
-                    nestinctypes_concise.append('repA_CP013325')
-                elif probe.startswith('repA_2_pKPC-2_JX397875'):
-                    nestinctypes.append('repA_JX397875')
-                    nestinctypes_concise.append('repA_JX397875')
-                elif probe.startswith('RepA_1_pKPC-CAV1321_CP011611'):
-                    nestinctypes.append('repA_CP011611')
-                    nestinctypes_concise.append('repA_CP011611')
-                else:
-                    print('{} {}'.format('rep/repA probe handling error', probe)); sys.exit()
+            # elif probe.startswith('repA') or probe.startswith('Rep'): #these are recently added rep genes which don't fit with previous inc types                                                 
+            #     if probe.startswith('Rep_1_pKPC-2_CP011573'):
+            #         nestinctypes.append('rep_CP011573')
+            #         nestinctypes_concise.append('rep_CP011573')
+            #     elif probe.startswith('repA_1_pKPC-2_CP013325'):
+            #         nestinctypes.append('repA_CP013325')
+            #         nestinctypes_concise.append('repA_CP013325')
+            #     elif probe.startswith('repA_2_pKPC-2_JX397875'):
+            #         nestinctypes.append('repA_JX397875')
+            #         nestinctypes_concise.append('repA_JX397875')
+            #     elif probe.startswith('RepA_1_pKPC-CAV1321_CP011611'):
+            #         nestinctypes.append('repA_CP011611')
+            #         nestinctypes_concise.append('repA_CP011611')
+            #     else:
+            #         nestinctypes.append(probesplit[0])
+            #         print('{} {}'.format('Rep/repA probe could not be assigned a known replicon type', probe))
             elif probe.startswith('FIA') or probe.startswith('FIA('):
                 nestinctypes.append('IncFIA')
                 nestinctypes_concise.append('IncF')
             elif probe.startswith('FII') or probe.startswith('FII('):
                 nestinctypes.append('IncFII')
                 nestinctypes_concise.append('IncF')
+            elif probe.startswith('IncY'):
+                if probe.startswith('IncY_1'):
+                    nestinctypes.append('IncY') #currently only 1 IncY type IncY_1
+                else:
+                    nestinctypes.append(probesplit[0])
+                    print('{} {}'.format('IncY probe could not be assigned a known replicon type', probe))
+                nestinctypes_concise.append('IncY')
             else:
-                nestinctypes.append(probesplit[0])
-                nestinctypes_concise.append(probesplit[0])
-
-        inctype_probes=sorted(inctype_probes) #sort in alphabetical order                                                                                                                         
-        inctypes=sorted(nestinctypes)
-        inctypes_concise=sorted(nestinctypes_concise)
-
-        inctype_probes=str(unlist(inctype_probes))
-        inctypes=str(unlist(inctypes))
-        inctypes_concise=str(unlist(inctypes_concise))
+                print('{} {}'.format('unknown Inc probe could not be assigned a known replicon type/family', probe))
+                nestinctypes.append(probe)
+                nestinctypes_concise.append(probe)
+                
+        #sort probes,types,families in alphabetical order, according to probes
+        inctype_probes_list=[]
+        inctypes_list=[]
+        inctypes_concise_list=[]
+        for p,t,f in sorted(zip(inctype_probes,nestinctypes,nestinctypes_concise)):
+            inctype_probes_list.append(p)
+            inctypes_list.append(t)
+            inctypes_concise_list.append(f)
+        #convert sorted lists to strings
+        inctype_probes=str(unlist(inctype_probes_list))
+        inctypes=str(unlist(inctypes_list))
+        inctypes_concise=str(unlist(inctypes_concise_list))
 
         return (inctypes, inctypes_concise, inctype_probes, inclength)
     elif db=='gram_positive':
@@ -451,14 +492,19 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
             probesplit=probe.split('_')
             nestinctypes.append(probesplit[0])
             nestinctypes_concise.append(probesplit[0])
-            
-        inctype_probes=sorted(inctype_probes) #sort in alphabetical order                                                                                                                         
-        inctypes=sorted(nestinctypes)
-        inctypes_concise=sorted(nestinctypes_concise)
 
-        inctype_probes=str(unlist(inctype_probes))
-        inctypes=str(unlist(inctypes))
-        inctypes_concise=str(unlist(inctypes_concise))
+        #sort probes,types,families in alphabetical order, according to probes
+        inctype_probes_list=[]
+        inctypes_list=[]
+        inctypes_concise_list=[]
+        for p,t,f in sorted(zip(inctype_probes,nestinctypes,nestinctypes_concise)):
+            inctype_probes_list.append(p)
+            inctypes_list.append(t)
+            inctypes_concise_list.append(f)
+        #convert sorted lists to strings
+        inctype_probes=str(unlist(inctype_probes_list))
+        inctypes=str(unlist(inctypes_list))
+        inctypes_concise=str(unlist(inctypes_concise_list))
 
         return (inctypes, inctypes_concise, inctype_probes, inclength)
     else:
