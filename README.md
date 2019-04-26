@@ -126,6 +126,7 @@ The `--inhousesequences` flag allows a user to provide their own multi-FASTA fil
 <br>
 _Example 1: you wish to update an existing database with more recent accessions:_<br>
 You could run bacterialBercow with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of bacterialBercow by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.<br>
+<br>
 _Example 2: you have access to a computer cluster which can be run with lots of `--threads` but for security reasons, the HTTPS protocol (required for accessing data from NCBI) is not permitted:_<br>
 You could run bacterialBercow in two stages. First, on your own computer, run bacterialBercow with the `--retrievesequencesonly` flag. Then, with the same output directory (`-o` flag) specified, run the typing stage of the pipeline on your computer cluster by providing the `--restartwithsequences` flag along with lots of `--threads`.
 
@@ -143,7 +144,7 @@ incompleteaccessions.tsv       	    | as above but not annotated as complete; th
 accessions_filtered.tsv        	    | accessions remaining, after filtering based on accession title text
 excludedaccessions.tsv	     	    | accessions excluded, after filtering based on accession title text  
 accessions_filtered_dblinks.tsv     | BioSample and BioProject accession ids associated with nucleotide accessions from accessions_filtered.tsv  
-accessions_filtered_metadata.tsv    | BioSample metadata (submitter name and owner name) associated with BioSample accessions
+accessions_filtered_metadata.tsv    | BioSample accessions and metadata (submitter name and owner name)
 accessions_filtered_refseq_gb.tsv   | Refseq accessions and their cognate Genbank accessions
 identicalaccessions.tsv		    | accessions with identical sequences; corresponding submitter metadata and BioProject accession ids 
 accessions_filtered.fa              | sequences of accessions_filtered.tsv		    
@@ -171,7 +172,7 @@ For background information on curating NCBI plasmids see recent papers: [Orlek _
 
 1. Putative complete plasmid accessions, along with accompanying information such as accession title are downloaded from NCBI nucleotide. To be considered a putative plasmid, the accession must be annotated as "plasmid" and "complete".
 2. To select for complete plasmid genomes, the accessions are filtered using a regular expression search of the accession title text. For example, titles including the words "gene", "transposon", or "synthetic vector" would be excluded.
-3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates; therefore, deduplication is conducted, leaving only one sequence from the duplicate set of sequences with identical nucleotide sequence, favouring retention of Refseq over Genbank accessions. More specifically, deduplication is conducted according to the argument provided to the `--deduplicationmethod` flag:
+3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates with identical nucleotide sequences; therefore, deduplication is conducted, leaving only one sequence from the set of duplicate sequences, favouring retention of Refseq over Genbank accessions. More specifically, deduplication is conducted according to the argument provided to the `--deduplicationmethod` flag:
     * `all`: all duplicate sequences are filtered, leaving only one representative sequence.
     * `bioproject`: sequences are deduplicated if they share the same BioSample accession id, and the same BioProject accession id (default method).
     * `submitter`: sequences are deduplicated if they share the same BioSample accession id, and the same submitter metadata (submitter contact name and submitter affiliation name, from the [BioSample "Owner"](https://www.ncbi.nlm.nih.gov/books/NBK169436/) field)
