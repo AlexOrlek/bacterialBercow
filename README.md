@@ -118,17 +118,17 @@ The `--typing` flag is applicable if the `--inhousesequences` flag is provided. 
 
 
 __Pipeline step options specifying starting and stopping points__:<br>
-If provided, the `--retrieveaccessionsonly` flag will stop the pipeline after `accessions_filtered.tsv` is produced (see [Output file](output-files) and [Background and methods](#background-and-methods)).<br>
+If provided, the `--retrieveaccessionsonly` flag will stop the pipeline after `accessions_filtered.tsv` is produced (see [Output files](#output-files) and [Background and methods](#background-and-methods)).<br>
 If provided, the `--retrievesequencesonly` flag will stop the pipeline after `accessions_filtered_deduplicated.fa` is produced.<br>
 If provided, the `--restartwithsequences` flag will re-start the pipeline from the point where `--retrievesequencesonly` stopped the pipeline. The output directory specified must be the same as the output directory that was previously specified when the pipeline was run with the `--retrievesequencesonly` flag.<br>
-The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions.<br>
+The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions. Accessions can be provided in "accession" or "accession.version" format; however, if the accession version has been updated on the NCBI server, then using an older accession.version as input will produce an error, so providing accessions without .version suffixes is more robust.<br>
 The `--inhousesequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and rMLST typing.<br>
 <br>
 _Example 1: you wish to update an existing database with more recent accessions:_<br>
 You could run bacterialBercow with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of bacterialBercow by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.<br>
 <br>
 _Example 2: you have access to a computer cluster which can be run with lots of `--threads` but for security reasons, the HTTPS protocol (required for accessing data from NCBI) is not permitted:_<br>
-You could run bacterialBercow in two stages. First, on your own computer, run bacterialBercow with the `--retrievesequencesonly` flag. Then, with the same output directory (`-o` flag) specified, run the typing stage of the pipeline on your computer cluster by providing the `--restartwithsequences` flag along with lots of `--threads`.
+You could run bacterialBercow in two stages. First, on your own computer, run bacterialBercow with the `--retrievesequencesonly` flag. Then, with the same output directory (`-o` flag) specified, run the typing stage of the pipeline on your computer cluster by providing the `--restartwithsequences` flag along with lots of `--threads`. Running in two stages as described also offers the opportunity to check that data has been successfully retrieved from NCBI before running with the `--restartwithsequences` flag. For example, accessions_filtered.tsv should contain the same number of nucleotide accessions as accessions_filterd.fa and accessions_filtered_dblinks.tsv (see [Output files](#output-files)).
 
 
 
@@ -179,7 +179,7 @@ For background information on curating NCBI plasmids see recent papers: [Orlek _
     
     The aim of the `bioproject` and `submitter` methods is to allow for interesting duplicates to be retained - identical plasmids from distinct samples and sequencing projects, that may represent transmission of a conserved plasmid between different epidemiological settings. Nucleotide accessions originating from the same biological sample should share the same BioSample accession; nucleotide accessions originating from the same sequencing project should share the same primary BioProject id ([Pruitt 2011](https://www.ncbi.nlm.nih.gov/books/NBK54015/), [Barrett 2012](https://www.ncbi.nlm.nih.gov/pubmed/22139929), [Benson 2013](https://academic.oup.com/nar/article/41/D1/D36/1068219)). However, in Refseq, higher-level primary BioProject accessions [can be created by NCBI staff](https://www.ncbi.nlm.nih.gov/bioproject/docs/faq/#what-is-project-type), e.g. [PRJNA224116](https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA224116). This breaks the correspondence between Refseq BioProject accession and sequencing project; therefore, for Refseq accessions the original BioProject accession id is retrieved via the cognate Genbank accession.    
 4. The remaining sequences are BLASTed again the PlasmidFinder replicon database and the rMLST database.
-5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file (although see the [FAQ](faq) for the potential limitations of this approach). Accessions with rMLST loci detected are recorded; these could be chromid or chromosomal sequences.
+5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file (although see the [FAQ](#faq) for the potential limitations of this approach). Accessions with rMLST loci detected are recorded; these could be chromid or chromosomal sequences.
 
 # FAQ
 

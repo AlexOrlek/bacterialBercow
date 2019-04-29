@@ -27,11 +27,13 @@ with open('%s/accessions_filtered_metadata.tsv'%outdir) as f:
         biosampleaccession=data[0]
         name=data[1]
         owner=data[2]
-        biosamplenamedict[biosampleaccession]=[name,owner]
+        biosamplenamedict[biosampleaccession]=[name,owner]  #duplicate data (due to nucleotide accessions with same biosample accession id) will be overwritten
+
+#N.B if the nucleotide accession had no biosample elink, this will just result in no output row in accessions_filtered_metadata
 
 #print biosamplenamedict["SAMN05717715"]
 #sys.exit()
-nuclaccessions=[]
+nuclaccessions=[]  #accessions_filtered_dblinks.tsv should have same number of rows (nucleotide accessions) as accessions_filtered.tsv
 metadatadict={} #accession : [biosample accession, name]
 bioprojectdict={}
 bioprojectdict_noaccessionversion={}
@@ -43,6 +45,8 @@ with open('%s/accessions_filtered_dblinks.tsv'%outdir) as f:
         accession=data[0]
         biosample=data[1]
         bioproject=data[2]
+        if int(bioproject)==0: #projectid 0 means no bioproject link
+            bioproject='-'
         nuclaccessions.append(accession)
         if biosample in biosamplenamedict:
             name,owner=biosamplenamedict[biosample]
@@ -77,9 +81,12 @@ for accession in nuclaccessions:
     #if accession is refseq, edit the project id in bioprojectdict
     if '_' in accession: #refseq accession
         gbaccession=refseqgenbankdict[accession]
-        gbbioproject=bioprojectdict_noaccessionversion[gbaccession]
-        bioprojectdict[accession]=gbbioproject
-        
+        if gbaccession in bioprojectdict_noaccessionversion:
+            gbbioproject=bioprojectdict_noaccessionversion[gbaccession]
+            bioprojectdict[accession]=gbbioproject
+        else:  #no cognate genbank accession
+            bioprojectdict[accession]='-'
+            
 #for accession in sorted(nuclaccessions):
 #    print accession,bioprojectdict[accession]
 #sys.exit()
