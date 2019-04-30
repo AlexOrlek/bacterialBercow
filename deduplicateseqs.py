@@ -61,7 +61,7 @@ with open('%s/accessions_filtered_dblinks.tsv'%outdir) as f:
         bioprojectdict_noaccessionversion[accession_noversion]=bioproject
 
 #print metadatadict["NZ_CP017408.1"]
-#sys.exit()        
+#sys.exit()
 
 
 #get dictionary of refseq:genbank accession ids and use to edit accession:bioprojectid dict

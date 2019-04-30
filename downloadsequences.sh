@@ -19,7 +19,7 @@ econtact -email ${emailaddress} -tool plasmiddownload
 len=${#accessions[@]}
 chunklen=${batchsize}
 
-#download sequences as well as biosample,bioproject,owner metadata
+#download sequences as well as dblinks (biosample,bioproject)
 for i in $(eval echo {0..$len..$chunklen})
 do
     sum=$(( ($i + $chunklen) + 1 ))
@@ -76,7 +76,7 @@ do
         chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input                                                                          
         #echo "$chunkedaccessionsinput"                                                                                                                                                                     
         echo "$chunkedaccessionsinput" | epost -db biosample -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -first -VAR1 Accession -VAR2 First -VAR3 Last -block Owner -def "-" -sep " " -element "&VAR1" "&VAR2","&VAR3" -first Name >> ${outdir}/accessions_filtered_metadata.tsv
-        sleep 1
+        break
     else
         echo $i
         chunkedaccessions=${biosampleaccessions[@]:$i:$chunklen} #slice accessions array
@@ -115,13 +115,12 @@ if [ ${#refseqaccessions[@]} -gt 0 ]; then
             chunkedaccessions=${refseqaccessions[@]:$i:$chunklen} #slice accessions array
 	    chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
 	    echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion AssemblyAcc >> ${outdir}/accessions_filtered_refseq_gb.tsv
-	    sleep 1
 	    break
 	else
             echo $i
             chunkedaccessions=${refseqaccessions[@]:$i:$chunklen} #slice accessions array                                                           
             chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
-	    	    echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion AssemblyAcc >> ${outdir}/accessions_filtered_refseq_gb.tsv
+	    echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion AssemblyAcc >> ${outdir}/accessions_filtered_refseq_gb.tsv
 	    sleep 1
 	fi
     done
