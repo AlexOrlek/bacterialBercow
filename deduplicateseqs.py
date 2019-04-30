@@ -84,7 +84,7 @@ for accession in nuclaccessions:
         if gbaccession in bioprojectdict_noaccessionversion:
             gbbioproject=bioprojectdict_noaccessionversion[gbaccession]
             bioprojectdict[accession]=gbbioproject
-        else:  #no cognate genbank accession
+        else:  #no cognate genbank accession - overwriting with "-" (alternative would be to keep refseq bioproject to allow for refseq only input, but in this case probably best to use owner metadata)
             bioprojectdict[accession]='-'
             
 #for accession in sorted(nuclaccessions):
