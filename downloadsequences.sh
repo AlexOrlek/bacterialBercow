@@ -60,7 +60,7 @@ echo 'finished sequence download, and dblink retrieval'
 
 echo -e 'Accession\tName\tOwner' > ${outdir}/accessions_filtered_metadata.tsv
 
-biosampleaccessions=($(cut -f2 "${outdir}/accessions_filtered_dblinks.tsv" | sed '1d' | awk '$1 != "-"'))
+biosampleaccessions=($(cut -f2 "${outdir}/accessions_filtered_dblinks.tsv" | sed '1d' | awk '$1 != "-"' | sort | uniq))
 
 len=${#biosampleaccessions[@]}
 
@@ -88,6 +88,7 @@ do
 done
 
 echo 'finished biosample metadata download'
+
 
 #for refseq accessions get the cognate genbank accession (because I'll be using genbank bioproject ids)
 
