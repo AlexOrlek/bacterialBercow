@@ -14,10 +14,8 @@ outdir=sys.argv[2]
 
 ###find deduplicated accessions
 
-#first download whole plasmid sequences as well as accession ids and number of features
 
-
-#get accession info from accessions_filtereed_biosample.tsv
+#get biosample metadata from accessions_filtered_metadata.tsv
 biosamplenamedict={} #biosample accession : name of submittor
 with open('%s/accessions_filtered_metadata.tsv'%outdir) as f:
     for indx, line in enumerate(f):
@@ -63,8 +61,22 @@ with open('%s/accessions_filtered_dblinks.tsv'%outdir) as f:
 #print metadatadict["NZ_CP017408.1"]
 #sys.exit()
 
+#append to bioproject_noaccessionversion dictionary, using info in accessions_filtered_missinggb.tsv
 
-#get dictionary of refseq:genbank accession ids and use to edit accession:bioprojectid dict
+with open('%s/accessions_filtered_missinggb.tsv'%outdir) as f:
+    for indx, line in enumerate(f):
+        if indx==0:
+            continue
+        data=line.strip().split('\t')
+        accession=data[0]  #"accession" not "accession.version" format
+        accession_noversion=accession.split('.')[0]
+        bioproject=data[1]
+        if accession_noversion not in bioprojectdict_noaccessionversion:
+            bioprojectdict_noaccessionversion[accession_noversion]=bioproject
+
+
+
+#get dictionary of refseq:genbank accession ids and use to edit refseq accession values of bioprojectdict
 refseqgenbankdict={}
 with open('%s/accessions_filtered_refseq_gb.tsv'%outdir) as f:
     for indx, line in enumerate(f):
@@ -74,7 +86,6 @@ with open('%s/accessions_filtered_refseq_gb.tsv'%outdir) as f:
         refseqaccession=data[0]
         genbankaccession=data[1]
         refseqgenbankdict[refseqaccession]=genbankaccession #remember that refseq accession is in "accession.version" format whereas genbank is in "accession" format
-
 
 
 for accession in nuclaccessions:
@@ -120,13 +131,11 @@ for indx, seq_record in enumerate(SeqIO.parse(fileObj,"fasta")):
 
 
 
-
-
 #write to file
 deduplicatebymetadata=False #deduplicate all identical accessions
 f2=open('%s/accessions_filtered_deduplicated.fa'%outdir,'w')
 f3=open('%s/identicalaccessions.tsv'%outdir,'w')
-f3.write('Accessions\tRefseq_Accessions\tGenbank_Accessions\tBiosamples\tSubmitter_Names\tOwners\tBioProjects\tUnique_Biosamples\tUnique_Names\tUnique_Owners\tUnique_BioProjects\tNum_Accessions\tNum_Refseq_Accessions\tNum_Genbank_Accessions\tNum_Unique_Biosamples\tNum_Unique_Names\tNum_Unique_Owners\tNum_Unique_BioProjects\tSame_Biosample\tSame_Submitter_Name\tSame_Owner\tSame_BioProject\tAccessions_Deduplicatedby_Metadata\tAccessions_Deduplicatedby_BioProject\n')
+f3.write('Accessions\tRefseq_Accessions\tGenbank_Accessions\tBiosamples\tSubmitter_Names\tOwners\tBioProjects\tUnique_Biosamples\tUnique_Names\tUnique_Owners\tUnique_BioProjects\tNum_Accessions\tNum_Refseq_Accessions\tNum_Genbank_Accessions\tNum_Unique_Biosamples\tNum_Unique_Names\tNum_Unique_Owners\tNum_Unique_BioProjects\tSame_Biosample\tSame_Submitter_Name\tSame_Owner\tSame_BioProject\tAccessions_Deduplicatedby_Metadata\tAccessions_Deduplicatedby_BioProject\tAccessions_Deduplicatedby_Metadata_BioProject\n')
 for seq, values in plasmiddict.iteritems():
     if len(values)>1: #multiple accessions for a given sequence
         accessions=map(operator.itemgetter(0), values)
@@ -144,6 +153,7 @@ for seq, values in plasmiddict.iteritems():
         bioprojectlist=[]
         metadatagroups=[]
         bioprojectgroups=[]
+        bothgroups=[]
         for biosample,name,owner,bioproject in zip(biosamples,names,owners,bioprojects):
             if biosample not in biosamplelist and biosample!='-':
                 biosamplelist.append(biosample)
@@ -172,15 +182,20 @@ for seq, values in plasmiddict.iteritems():
             #print biosampleindx,nameindx
             metadataindices=[]
             bioprojectindices=[]
+            bothindices=[]
             if biosampleindx!='NA':
                 metadataindices.append(biosampleindx)
                 bioprojectindices.append(biosampleindx)
+                bothindices.append(biosampleindx)
             if nameindx!='NA':
                 metadataindices.append(nameindx)
+                bothindices.append(nameindx)
             if ownerindx!='NA':
                 metadataindices.append(ownerindx)
+                bothindices.append(ownerindx)
             if bioprojectindx!='NA':
                 bioprojectindices.append(bioprojectindx)
+                bothindices.append(bioprojectindx)
             if len(metadataindices)==3: #i.e. all 3 fields present
                 metadatagroup=min(metadataindices)
             else:
@@ -191,14 +206,22 @@ for seq, values in plasmiddict.iteritems():
             else:
                 bioprojectgroup=0
             bioprojectgroups.append(bioprojectgroup)
+            if len(bothindices)==4: #i.e. all 4 fields present
+                bothgroup=min(bothindices)
+            else:
+                bothgroup=0
+            bothgroups.append(bothgroup)
         metadatagroupsset=set(metadatagroups)
         bioprojectgroupsset=set(bioprojectgroups)
+        bothgroupsset=set(bothgroups)
         #print metadatagroupsset, biosamples,names,len(metadatagroupsset)
         refseqaccessions=[a for a in accessions if '_' in a]
         genbankaccessions=[a for a in accessions if '_' not in a]
-        if len(refseqaccessions)==0:
+        numrefseqaccessions=len(refseqaccessions)
+        numgenbankaccessions=len(genbankaccessions)
+        if numrefseqaccessions==0:
             refseqaccessions='-'
-        if len(genbankaccessions)==0:
+        if numgenbankaccessions==0:
             genbankaccessions='-'
         biosamplesunique=unique(biosamples)
         namesunique=unique(names)
@@ -247,6 +270,7 @@ for seq, values in plasmiddict.iteritems():
         #    f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%(','.join(accessions),','.join(refseqaccessions),','.join(genbankaccessions),','.join(biosamples),','.join(names),','.join(biosamplesunique),','.join(namesunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),'same biosample or name'))
         metadatadeduplicatedaccessions=[]
         bioprojectdeduplicatedaccessions=[]
+        bothdeduplicatedaccessions=[]
         for group in metadatagroupsset:
             indices=[indx for indx,g in enumerate(metadatagroups) if g==group] #get all indices that equal group
             if len(indices)>1: #multiple accessions for a given metadata group - deduplicate by selecting refseq if available
@@ -275,6 +299,20 @@ for seq, values in plasmiddict.iteritems():
             if deduplicationmethod=="bioproject": #choose one sequence per bioproject group
                 f2.write('>%s\n'%accession)
                 f2.write('%s\n'%seq)
+        for group in bothgroupsset:
+            indices=[indx for indx,g in enumerate(bothgroups) if g==group] #get all indices that equal group
+            if len(indices)>1: #multiple accessions for a given both group - deduplicate by selecting refseq if available
+                myrefseqindices=[indx for indx,t in enumerate(accessiontypes) if indx in indices and t=='refseq']
+                if len(myrefseqindices)>0: #if there's at least 1 refseq, select the first refseq accession
+                    accession=accessions[myrefseqindices[0]]
+                else: #if there's only genbank, select the first genbank
+                    accession=accessions[indices[0]]
+            else: #1 accession for a given both group; select accession
+                accession=accessions[indices[0]]
+            bothdeduplicatedaccessions.append(accession)
+            if deduplicationmethod=="both": #choose one sequence per both group
+                f2.write('>%s\n'%accession)
+                f2.write('%s\n'%seq)
                 
         if deduplicationmethod=="all": #choose one sequence across all duplicates irrespective of whether or not metadata/bioproject is shared
             myrefseqindices=[indx for indx,t in enumerate(accessiontypes) if t=='refseq']
@@ -285,7 +323,7 @@ for seq, values in plasmiddict.iteritems():
             f2.write('>%s\n'%accession)
             f2.write('%s\n'%seq)
 
-        f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%('|'.join(accessions),'|'.join(refseqaccessions),'|'.join(genbankaccessions),'|'.join(biosamples),'|'.join(names),'|'.join(owners),'|'.join(bioprojects),'|'.join(biosamplesunique),'|'.join(namesunique),'|'.join(ownersunique),'|'.join(bioprojectsunique),len(accessions),len(refseqaccessions),len(genbankaccessions),len(biosamplesuniquenonmissing),len(namesuniquenonmissing),len(ownersuniquenonmissing),len(bioprojectsuniquenonmissing),samebiosample,samename,sameowner,samebioproject,'|'.join(metadatadeduplicatedaccessions),'|'.join(bioprojectdeduplicatedaccessions)))
+        f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%('|'.join(accessions),'|'.join(refseqaccessions),'|'.join(genbankaccessions),'|'.join(biosamples),'|'.join(names),'|'.join(owners),'|'.join(bioprojects),'|'.join(biosamplesunique),'|'.join(namesunique),'|'.join(ownersunique),'|'.join(bioprojectsunique),len(accessions),numrefseqaccessions,numgenbankaccessions,len(biosamplesuniquenonmissing),len(namesuniquenonmissing),len(ownersuniquenonmissing),len(bioprojectsuniquenonmissing),samebiosample,samename,sameowner,samebioproject,'|'.join(metadatadeduplicatedaccessions),'|'.join(bioprojectdeduplicatedaccessions),'|'.join(bothdeduplicatedaccessions)))
     else: #1 accession for a given sequence
         accession=values[0][0]
         f2.write('>%s\n'%accession)
