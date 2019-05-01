@@ -43,7 +43,7 @@ ncbi_group.add_argument('-b','--batchsize', help='Number of accession nucleotide
 #Replicon and rMLST typing options
 typing_group = parser.add_argument_group('Replicon and rMLST typing options')
 typing_group.add_argument('-t','--threads', help='Number of threads to use (default: 1)', default=1, type=positiveint)
-typing_group.add_argument('--typing', help='Specifies what sequence typing to perform (only applicable if in-house sequences are provided using --inhousesequences flag); either "replicon", "rmlst" typing or "both" (default: both)',default="both",required=False)
+typing_group.add_argument('--typing', help='Specifies what sequence typing to perform (only applicable if in-house sequences are provided using --inhousesequences flag); either "replicon", "rmlst" typing or "both" (default: both)',default="both",choices=["both","replicon","rmlst"],required=False)
 typing_group.add_argument('--enterobacdbpath', help='Path to the "enterobacteriaceae" plasmidfinder BLAST database (default: databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb)',required=False)
 typing_group.add_argument('--gramposdbpath', help='Path to the "gram_positive" plasmidfinder BLAST database (default: databases/plasmidfinder/gram_positive/gram_positivedb)',required=False)
 typing_group.add_argument('--rmlstdbpath', help='Path to the directory used to store the rmlst blast database files (default: databases/rmlstalleles/blastdbs)',required=False)
@@ -128,9 +128,11 @@ if args.inhousesequences==None:
 else:
     cmdArgs=["cat %s | bioawk -c fastx '{print $name,length($seq)}' > %s/seqlengths.tsv"%(str(args.inhousesequences),outputpath)]
     runsubprocess(cmdArgs,shell=True)
-    runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'enterobacteriaceae',enterobacteriaceaedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
-    runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'gram_positive',gram_positivedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
-    runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
+    if args.typing=='replicon' or args.typing=='both':
+        runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'enterobacteriaceae',enterobacteriaceaedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
+        runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'gram_positive',gram_positivedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
+    if args.typing=='rmlst' or args.typing=='both':
+        runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
     runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,'user',str(args.typing),'enterobacteriaceae', 'gram_positive'])
 
 

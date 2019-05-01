@@ -187,9 +187,9 @@ else:
         if typing=='both':
             f2.write('%s\t%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(rmlsttype),'\t'.join(reptype)))
         elif typing=='rmlst':
-            f2.write('%s\t%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(rmlsttype)))
+            f2.write('%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(rmlsttype)))
         else:
-            f2.write('%s\t%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(reptype)))
+            f2.write('%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(reptype)))
     f2.close()
 
 
