@@ -157,7 +157,7 @@ plasmids.fa		     	        | plasmid sequences
 plasmids.tsv		     	        | information on plasmid sequences including replicon typing
 nonplasmids.tsv			        | information on non-plasmid sequences including replicon typing and rMLST typing
 
-**\*** Additional BioProject accession ids, of missing cognate Genbank accessions - present in accessions_filtered_refseq_gb.tsv, but missing in accessions_filtered.tsv. Cognate Genbank accessions may be missing for the following reasons: 1) Only Refseq accessions were retrieved i.e. the `refseq` argument was provided to the `-s` flag; 2) Both Refseq and Genbank accessions were retrieved, but the Genbank accession was not included in accessions_filtered.tsv, most likely because annotation details differed between accessions e.g. the Refseq accession was annotated as complete but the Genbank accession was not; therefore the Genbank accession was filtered as incomplete.<br>
+**\*** Contains additional BioProject accession ids, of missing cognate Genbank accessions (present in accessions_filtered_refseq_gb.tsv, but missing in accessions_filtered.tsv). Cognate Genbank accessions may be missing for the following reasons: 1) Only Refseq accessions were retrieved i.e. the `refseq` argument was provided to the `-s` flag; 2) Both Refseq and Genbank accessions were retrieved, but the Genbank accession was not included in accessions_filtered.tsv, most likely because annotation details differed between Refseq and Genbank accessions e.g. the Refseq accession was annotated as complete but the Genbank accession was not; therefore the Genbank accession was excluded as incomplete.<br>
 <br>
 
 The below table shows outputs from running the pipeline with the `--inhousesequences` flag provided.
