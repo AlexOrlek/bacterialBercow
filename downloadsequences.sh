@@ -146,7 +146,7 @@ missinggbaccessions=(`echo ${Array1[@]} ${Array2[@]} ${Array2[@]} | tr ' ' '\n' 
 
 len=${#missinggbaccessions[@]}
 
-echo -e 'Accession\tBioProject' > ${outdir}/accessions_filtered_missinggb.tsv
+echo -e 'Accession\tBioProject' > ${outdir}/accessions_filtered_morebioprojects.tsv
 
 if [[ ${#refseqaccessions[@]} -gt 0 && $len -gt 0 ]]; then  #if there are cognate genbank accessions and at least some of these are missing from accessions_filtered...
     #download additional bioprojects for missing genbank accessions
@@ -161,14 +161,14 @@ if [[ ${#refseqaccessions[@]} -gt 0 && $len -gt 0 ]]; then  #if there are cognat
 	    chunkedaccessions=${missinggbaccessions[@]:$i:$chunklen} #slice accessions array
 	    chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
 	    #echo "$chunkedaccessionsinput"	
-	    echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion ProjectId >> ${outdir}/accessions_filtered_missinggb.tsv
+	    echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion ProjectId >> ${outdir}/accessions_filtered_morebioprojects.tsv
 	    break
 	else
 	    echo $i
 	    chunkedaccessions=${missinggbaccessions[@]:$i:$chunklen} #slice accessions array                                                           
 	    chunkedaccessionsinput=$(echo $chunkedaccessions | sed 's/ /\n/g')  #converting array to data column to use as epost input
 	    #echo "$chunkedaccessionsinput"
-	    echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion ProjectId >> ${outdir}/accessions_filtered_missinggb.tsv
+	    echo "$chunkedaccessionsinput" | epost -db nuccore -format acc | efetch -format docsum | xtract -pattern DocumentSummary -def "-" -element AccessionVersion ProjectId >> ${outdir}/accessions_filtered_morebioprojects.tsv
 	    sleep 1
 	fi
     done

@@ -61,9 +61,9 @@ with open('%s/accessions_filtered_dblinks.tsv'%outdir) as f:
 #print metadatadict["NZ_CP017408.1"]
 #sys.exit()
 
-#append to bioproject_noaccessionversion dictionary, using info in accessions_filtered_missinggb.tsv
+#append to bioproject_noaccessionversion dictionary, using info in accessions_filtered_morebioprojects.tsv
 
-with open('%s/accessions_filtered_missinggb.tsv'%outdir) as f:
+with open('%s/accessions_filtered_morebioprojects.tsv'%outdir) as f:
     for indx, line in enumerate(f):
         if indx==0:
             continue
