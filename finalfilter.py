@@ -99,7 +99,7 @@ if typing=='both' or typing=='rmlst':
 
 if sequenceorigin=='ncbi':
     ###non plasmid accessions; output tsv with rmlst and replicon typing info
-    f2=open('%s/nonplasmidaccessions.tsv'%outdir,'w')
+    f2=open('%s/nonplasmids.tsv'%outdir,'w')
     f2.write('Accession\tTopology\tLength\tTitle\tCompleteness\tSpecies\tribosomalST\tNum_Matches\tNum_Mismatches\tNum_Missing_Loci\trMLST_alleles\tEnterobacteriaceae_Type\tProbe_Hits\tNum_Probe_hits\tGram_positive_Type\tProbe_Hits\tNum_Probe_hits\n')
     with open('%s/accessions_filtered.tsv'%outdir) as f:
         for indx, line in enumerate(f):

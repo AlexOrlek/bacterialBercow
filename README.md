@@ -27,7 +27,8 @@ bacterialBercow also allows users to characterise their own in-house assembled s
 
 __Why use bacterialBercow__?<br>
 [PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) is an online database of curated plasmids, updated every ~3 months, so this is an easy way to get hold of NCBI plasmid sequences, and as an online database it comes with nice interactive features. However, there are reasons why you may want to use bacterialBercow instead (see [FAQ](#faq) for details). Notably, bacterialBercow is useful if you want to:
-* Characterise in-house (user-provided) sequences that have not yet been uploaded to NCBI, using replicon typing and rMLST typing. Note that in addition to rMLST loci being useful markers of non-plasmid (chromosomal or [chromid](https://www.ncbi.nlm.nih.gov/pubmed/20080407)) sequence, the rMLST typing scheme can be used to determine bacterial species ([Larsen _et al._ 2014](https://www.ncbi.nlm.nih.gov/pubmed/24574292)), given a complete chromosome (and it may be possible to determine species or genus-level taxonomic information from incomplete chromosomal sequence, if sufficient rMLST loci are represented). As far as I know, there are currently no other command-line tools for rMLST-based taxonomy (only the [rMLST website](https://pubmlst.org/rmlst/)). Plasmid replicon typing also has applications beyond plasmid detection; notably, it may provide insight into plasmid epidemiology ([Orlek _et al._ 2017](https://www.ncbi.nlm.nih.gov/pubmed/28232822)). bacterialBercow allows replicon or rMLST typing to be applied to in-house sequences on a standalone basis.
+* Characterise in-house (user-provided) sequences that have not yet been uploaded to NCBI, using replicon typing and rMLST typing, respectively, to help distinguish plasmid and non-plasmid (chromosomal or [chromid](https://www.ncbi.nlm.nih.gov/pubmed/20080407)) sequence.
+* Conduct standalone plasmid replicon typing or rMLST typing: as well as rMLST loci being useful markers of non-plasmid sequence, the rMLST typing scheme can be used to determine bacterial species ([Larsen _et al._ 2014](https://www.ncbi.nlm.nih.gov/pubmed/24574292)), given a complete chromosome (and it may be possible to determine species or genus-level taxonomic information from incomplete chromosomal sequence, if sufficient rMLST loci are represented). As far as I know, there are currently no other command-line tools for rMLST-based taxonomy (only the [rMLST website](https://pubmlst.org/rmlst/)). Plasmid replicon typing also has applications beyond plasmid detection; notably, it may provide insight into plasmid epidemiology ([Orlek _et al._ 2017](https://www.ncbi.nlm.nih.gov/pubmed/28232822)).
 * Distinguish interesting cases of identical plasmids that are likely to represent plasmid transmission (instead of simply deduplicating all identical sequences).
 * Retrieve the most up-to-date set of plasmids from NCBI.
 * Check the curation process at each step (which sequences are being excluded and why); and use this to fine-tune curation methods if desired. 
@@ -40,7 +41,7 @@ __Why use bacterialBercow__?<br>
 * [Python](https://www.python.org/) 3 is required for the `database_setup.py` executable (tested using Python 3.5); the `order.py` executable works with Python 2 (tested with Python 2.7) or Python 3
 * [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK52640/#_chapter1_Installation_) (tested using version 2.6.0)
 * [edirect](https://www.ncbi.nlm.nih.gov/books/NBK179288/)
-* A computer with internet access via the HTTPS protocol - required for retrieving data from NCBI.
+* A computer with a stable internet connection via the HTTPS protocol - required for retrieving data from NCBI.
 * [bioawk](https://github.com/lh3/bioawk)
 * The [rMLST database](https://pubmlst.org/rmlst/) (follow installation instructions below)
 
@@ -92,7 +93,7 @@ To retrieve and curate a custom set of NCBI accessions:
 `order.py -e first.last@email.com --accessions accessions.txt -o output-directory`
 
 
-To characterise your own bacterial sequences, provide an input multi-FASTA file:
+To characterise your own bacterial sequences using plasmid replicon typing and rMLST, provide an input multi-FASTA file:
 
 `order.py --inhousesequences samples.fasta -o output-directory`
 
@@ -123,13 +124,13 @@ If provided, the `--retrieveaccessionsonly` flag will stop the pipeline after `a
 If provided, the `--retrievesequencesonly` flag will stop the pipeline after `accessions_filtered_deduplicated.fa` is produced.<br>
 If provided, the `--restartwithsequences` flag will re-start the pipeline from the point where `--retrievesequencesonly` stopped the pipeline. The output directory specified must be the same as the output directory that was previously specified when the pipeline was run with the `--retrievesequencesonly` flag.<br>
 The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions. Accessions can be provided in "accession" or "accession.version" format; however, if the accession version has been updated on the NCBI server, then using an older accession.version as input will produce an error, so providing accessions without .version suffixes is more robust.<br>
-The `--inhousesequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and rMLST typing.<br>
+The `--inhousesequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and/or rMLST typing.<br>
 <br>
 _Example 1: you wish to update an existing database with more recent accessions:_<br>
 You could run bacterialBercow with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of bacterialBercow by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.<br>
 <br>
 _Example 2: you have access to a computer cluster which can be run with lots of `--threads` but for security reasons, the HTTPS protocol (required for accessing data from NCBI) is not permitted:_<br>
-You could run bacterialBercow in two stages. First, on your own computer, run bacterialBercow with the `--retrievesequencesonly` flag. Then, with the same output directory (`-o` flag) specified, run the typing stage of the pipeline on your computer cluster by providing the `--restartwithsequences` flag along with lots of `--threads`. Running in two stages as described also offers the opportunity to check that data has been successfully retrieved from NCBI before running with the `--restartwithsequences` flag. For example, accessions_filtered.tsv should contain the same number of nucleotide accessions as accessions_filterd.fa and accessions_filtered_dblinks.tsv (see [Output files](#output-files)).
+You could run bacterialBercow in two stages. First, on your own computer, run bacterialBercow with the `--retrievesequencesonly` flag. Then, with the same output directory (`-o` flag) specified, run the typing stage of the pipeline on your computer cluster by providing the `--restartwithsequences` flag along with lots of `--threads`. Running in two stages as described also offers the opportunity to check that data has been successfully retrieved from NCBI before running with the `--restartwithsequences` flag. For example, accessions_filtered.tsv should contain the same number of nucleotide accessions as accessions_filtered.fa and accessions_filtered_dblinks.tsv (see [Output files](#output-files)).
 
 
 
@@ -148,7 +149,7 @@ accessions_filtered_dblinks.tsv         | BioSample and BioProject accession ids
 accessions_filtered_metadata.tsv        | BioSample accessions and metadata (submitter name and owner name)
 accessions_filtered_refseq_gb.tsv       | Refseq accessions and their cognate Genbank accessions
 accessions_filtered_morebioprojects.tsv | see below for explanation **\*** 
-identicalaccessions.tsv		        | accessions with identical sequences; corresponding submitter metadata and BioProject accession ids 
+identicalaccessions.tsv		        | information on accessions with identical sequences, including corresponding submitter metadata and BioProject accession ids 
 accessions_filtered.fa                  | sequences of accessions_filtered.tsv		    
 accessions_filtered_deduplicated.fa     | sequences remaining after removal of duplicate sequences  
 plasmidfinder/                	        | directory containing outputs from BLASTing remaining sequences against plasmid replicon loci
@@ -157,7 +158,7 @@ plasmids.fa		     	        | plasmid sequences
 plasmids.tsv		     	        | information on plasmid sequences including replicon typing
 nonplasmids.tsv			        | information on non-plasmid sequences including replicon typing and rMLST typing
 
-**\*** Contains additional BioProject accession ids, of missing cognate Genbank accessions (present in accessions_filtered_refseq_gb.tsv, but missing in accessions_filtered.tsv). Cognate Genbank accessions may be missing for the following reasons: 1) Only Refseq accessions were retrieved i.e. the `refseq` argument was provided to the `-s` flag; 2) Both Refseq and Genbank accessions were retrieved, but the Genbank accession was not included in accessions_filtered.tsv, most likely because annotation details differed between Refseq and Genbank accessions e.g. the Refseq accession was annotated as complete but the Genbank accession was not; therefore the Genbank accession was excluded as incomplete.<br>
+**\*** Contains additional BioProject accession ids of missing cognate Genbank accessions (present in accessions_filtered_refseq_gb.tsv, but missing in accessions_filtered.tsv). Cognate Genbank accessions may be missing for the following reasons: 1) Only Refseq accessions were retrieved i.e. the `refseq` argument was provided to the `-s` flag; 2) Both Refseq and Genbank accessions were retrieved, but the Genbank accession was not included in accessions_filtered.tsv, most likely because annotation details differed between Refseq and Genbank accessions e.g. the Refseq accession was annotated as complete but the Genbank accession was not; therefore the Genbank accession was excluded as incomplete.<br>
 <br>
 
 The below table shows outputs from running the pipeline with the `--inhousesequences` flag provided.
@@ -169,6 +170,8 @@ rmlst/                        	    | directory containing output from BLASTing s
 seqlengths.tsv			    | sequence names (from FASTA headers) and corresponding sequence lengths
 typing.tsv			    | information on sequences including replicon typing and rMLST typing
 
+<br>
+For an explanation of why the output of `--inhousesequences` in the table above differs from the final output in the first table, see [FAQ](#faq)
 
 
 # Background and methods
@@ -177,7 +180,7 @@ For background information on curating NCBI plasmids see recent papers: [Orlek _
 
 1. Putative complete plasmid accessions, along with accompanying information such as accession title are downloaded from NCBI nucleotide. To be considered a putative plasmid, the accession must be annotated as "plasmid" and "complete".
 2. To select for complete plasmid genomes, the accessions are filtered using a regular expression search of the accession title text. For example, titles including the words "gene", "transposon", or "synthetic vector" would be excluded.
-3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates with identical nucleotide sequences; therefore, deduplication is conducted, leaving only one sequence from the set of duplicate sequences, favouring retention of Refseq over Genbank accessions. More specifically, deduplication is conducted according to the argument provided to the `--deduplicationmethod` flag:
+3. The filtered accession sequences are downloaded as a FASTA file. If both Refseq and Genbank accessions have been retrieved, there will be duplicates with identical nucleotide sequences; therefore, deduplication is conducted, leaving only one sequence from the set of duplicate sequences, favouring retention of Refseq over Genbank accessions. Deduplication is conducted even if only Refseq accessions are provided (identical sequences may be present in Refseq). Deduplication is conducted according to the argument provided to the `--deduplicationmethod` flag:
     * `all`: all duplicate sequences are filtered, leaving only one representative sequence.
     * `bioproject`: sequences are deduplicated if they share the same BioSample accession id, and the same BioProject accession id.
     * `submitter`: sequences are deduplicated if they share the same BioSample accession id, and the same submitter metadata (submitter contact name and submitter affiliation name, from the [BioSample "Owner"](https://www.ncbi.nlm.nih.gov/books/NBK169436/) field).
@@ -185,8 +188,11 @@ For background information on curating NCBI plasmids see recent papers: [Orlek _
     
     The aim of the `bioproject`, `submitter`, and `both` methods is to allow for interesting duplicates to be retained - identical plasmids from distinct samples and sequencing projects, that may represent transmission of a conserved plasmid between different epidemiological settings. Nucleotide accessions originating from the same biological sample should share the same BioSample accession; nucleotide accessions originating from the same sequencing project should share the same primary BioProject id ([Pruitt 2011](https://www.ncbi.nlm.nih.gov/books/NBK54015/), [Barrett 2012](https://www.ncbi.nlm.nih.gov/pubmed/22139929), [Benson 2013](https://academic.oup.com/nar/article/41/D1/D36/1068219)). However, in Refseq, higher-level primary BioProject accessions [can be created by NCBI staff](https://www.ncbi.nlm.nih.gov/bioproject/docs/faq/#what-is-project-type), e.g. [PRJNA224116](https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA224116). This breaks the correspondence between Refseq BioProject accession and sequencing project; therefore, for Refseq accessions the original BioProject accession id is retrieved via the cognate Genbank accession.    
 4. The remaining sequences are BLASTed again the PlasmidFinder replicon database and the rMLST database.
-5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file (although see the [FAQ](#faq) for the potential limitations of this approach). Accessions with rMLST loci detected are recorded; these could be chromid or chromosomal sequences.
-6. Based on the loci detected, plasmid replicon types, and rMLST types and species are assigned to sequences (it may not be possible to assign species unambiguously if insufficient loci are detected).
+5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file (although see "caveats" in the [FAQ](#faq) section for potential limitations of this approach). Accessions with rMLST loci detected are recorded; these could be chromid or chromosomal sequences.
+6. Based on the loci detected, plasmid replicon types, rMLST types, and rMLST-based species predictions are assigned to sequences (it may not be possible to assign species unambiguously if insufficient loci are detected).
+
+<br>
+If in-house sequences are provided (`--inhousesequences`), replicon typing and rMLST are conducted (step 4), but the subsequent methods differ from steps 5 and 6. For an explanation, see [FAQ(#faq)]
 
 # FAQ
 
@@ -205,7 +211,8 @@ I previously published a similar method for plasmid curation ([Orlek _et al._ 20
     * Characterising sequences using plasmid replicon typing and rMLST can help towards their categorisation (as plasmid / chromosome / chromid). For example, a sequence encoding >50 rMLST loci is likely to be a complete or near-complete chromosome ([Jolley _et al._ 2012](https://mic.microbiologyresearch.org/content/journal/micro/10.1099/mic.0.055459-0#tab2)). Likewise, any sequence with one or more rMLST loci is either a chromid or chromosomal sequence. However, the typing results should be interpreted cautiously. A chromid is a plasmid-like sequence that encodes some essential bacterial genes ([di Cenzo & Finan 2017](https://mmbr.asm.org/content/81/3/e00019-17)). rMLST loci (which encode ribosomal proteins) are not the only group of essential genes ([Gil _et al._ 2004](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC515251/)); therefore, absence of rMLST loci does not necessarily mean that a sequence is a plasmid - it could be a chromid sequence encoding other essential genes. Future versions of bacterialBercow could incorporate more comprehensive sets of bacterial core genes in order to better distinguish chromid sequences.
 * **Which deduplication method should I use?**
 The simplest approach is to deduplicate all sequences i.e. select a single representative sequence from each set of duplicates. However, if you are interested in plasmid transmission, this is probably not the best approach. Obviously, evolution and sequencing error mean that independent recovery of the same plasmid sequence will be very rare (and implausbile for long sequences). However, in the case of short sequences, cases of identical plasmids collected independently by different research groups have been reported ([Campos _et al._ 2019](https://mra.asm.org/content/8/9/e00051-19)). These interesting cases of transmission of short conserved plasmids must be distinguished from un-interesting duplicates (Genbank/Refseq duplicates, re-submission of the same sequence to NCBI, re-sequencing of the same sample). The BioProject accession id should ideally help to identify plasmids derived from the same sequencing project and thereby inform deduplication strategy. However, in my experience, BioProject ids are an unreliable surrogate for sequencing project, and therefore the default strategy is to use a repertoire of information: BioSample id, BioProject id, and submitter metadata.
-
+* **Why does using in-house sequences produce different final output files compared with when retrieving sequences from NCBI?**
+When retrieving sequences from NCBI, plasmid sequences and replicon typing information (plasmids.fa and plasmids.tsv) are recorded separately from rMLST typing information of non-plasmid sequences (nonplasmids.tsv). When in-house sequences are provided, plasmid and non-plasmid sequences are not distinguished; typing information is recorded in one file (typing.tsv). This is because NCBI sequences have metadata ("plasmid" genetic compartment; completeness annotation; accession title text) which can be used to filter out non-plasmid / incomplete sequences. This in turn means that after the filtered sequences have been characterised using plasmid replicon typing / rMLST, separation into plasmid / non-plasmid is more justified. Users providing their own sequences should use what they know about their assemblies as well as information recorded in typing.tsv to distinguish likely plasmid / chromosomal sequences. For example, if you have a complete assembly, then the longest sequence can be assigned as a chromosome, while other sequences can be assigned as likely plasmids. 
 
 # Acknowledgements
 
