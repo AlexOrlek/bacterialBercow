@@ -71,6 +71,8 @@ with open('%s/accessions_filtered_morebioprojects.tsv'%outdir) as f:
         accession=data[0]  #"accession" not "accession.version" format
         accession_noversion=accession.split('.')[0]
         bioproject=data[1]
+        if int(bioproject)==0:
+            bioproject='-'
         if accession_noversion not in bioprojectdict_noaccessionversion:
             bioprojectdict_noaccessionversion[accession_noversion]=bioproject
 
