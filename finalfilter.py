@@ -57,7 +57,7 @@ if typing=='both' or typing=='replicon':
             types,families,probes,length=['-','-','-','-']
         reptypedict[accession].extend([types,probes,length])
         if accession in gram_posaccessionsdict:
-            types,families,probes,length=inctyping(accession, enterobacaccessionsdict,db="gram_positive")
+            types,families,probes,length=inctyping(accession, gram_posaccessionsdict,db="gram_positive")
         else:
             types,families,probes,length=['-','-','-','-']
         reptypedict[accession].extend([types,probes,length])  #not including families

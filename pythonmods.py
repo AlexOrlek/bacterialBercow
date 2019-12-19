@@ -487,11 +487,15 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
 
         return (inctypes, inctypes_concise, inctype_probes, inclength)
     elif db=='gram_positive':
+        import re
+        gramposregex=re.compile(r'((?:^.*\|)?)(.*)') #allows probes of syntax Familyprefix|reptype_probeinfo OR reptype_probeinfo, by capturing both parts separately 
         for idx, probe in enumerate(inctype_probes):
             probe=str(probe).strip()
-            probesplit=probe.split('_')
-            nestinctypes.append(probesplit[0])
-            nestinctypes_concise.append(probesplit[0])
+            probegroup1=gramposregex.search(probe).group(1)
+            probegroup2=gramposregex.search(probe).group(2)
+            probesplit=probegroup2.split('_')
+            nestinctypes.append('%s%s'%(probegroup1,probesplit[0]))
+            nestinctypes_concise.append('%s%s'%(probegroup1,probesplit[0]))
 
         #sort probes,types,families in alphabetical order, according to probes
         inctype_probes_list=[]
