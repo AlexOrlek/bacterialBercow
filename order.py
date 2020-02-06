@@ -44,10 +44,6 @@ ncbi_group.add_argument('-b','--batchsize', help='Number of accession nucleotide
 typing_group = parser.add_argument_group('Replicon and rMLST typing options')
 typing_group.add_argument('-t','--threads', help='Number of threads to use (default: 1)', default=1, type=positiveint)
 typing_group.add_argument('--typing', help='Specifies what sequence typing to perform (only applicable if in-house sequences are provided using --inhousesequences flag); either "replicon", "rmlst" typing or "both" (default: both)',default="both",choices=["both","replicon","rmlst"],required=False)
-typing_group.add_argument('--enterobacdbpath', help='Path to the "enterobacteriaceae" plasmidfinder BLAST database (default: databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb)',required=False)
-typing_group.add_argument('--gramposdbpath', help='Path to the "gram_positive" plasmidfinder BLAST database (default: databases/plasmidfinder/gram_positive/gram_positivedb)',required=False)
-typing_group.add_argument('--rmlstdbpath', help='Path to the directory used to store the rmlst blast database files (default: databases/rmlstalleles/blastdbs)',required=False)
-typing_group.add_argument('--rmlstprofilepath', help='Path to the directory used to store the rmlst profile file (default: databases/rmlstalleles)',required=False)
 
 
 #Pipeline step customisation (specifying starting and stopping points)
@@ -98,27 +94,10 @@ runsubprocess(cmdArgs,shell=True)
 cmdArgs=['mkdir -p %s/rmlst'%outputpath]
 runsubprocess(cmdArgs,shell=True)
 
-if args.enterobacdbpath==None:
-    enterobacteriaceaedbpath='%s/databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb'%sourcedir
-else:
-    enterobacteriaceaedbpath=str(args.enterobacdbpath)
-    
-if args.gramposdbpath==None:
-    gram_positivedbpath='%s/databases/plasmidfinder/gram_positive/gram_positivedb'%sourcedir
-else:
-    gram_positivedbpath=str(args.gramposdbpath)
-      
-
-if args.rmlstdbpath==None:
-    rmlstdbpath='%s/databases/rmlstalleles/blastdbs'%sourcedir
-else:
-    rmlstdbpath=str(args.rmlstdbpath)
-
-if args.rmlstprofilepath==None:
-    rmlstprofilepath='%s/databases/rmlstalleles'%sourcedir
-else:
-    rmlstprofilepath=str(args.rmlstprofilepath)
-
+enterobacteriaceaedbpath='%s/databases/plasmidfinder_db/blastdbs/enterobacteriaceaedb'%sourcedir
+gram_positivedbpath='%s/databases/plasmidfinder_db/blastdbs/gram_positivedb'%sourcedir
+rmlstdbpath='%s/databases/rmlstalleles/blastdbs'%sourcedir
+rmlstprofilepath='%s/databases/rmlstalleles'%sourcedir
 
 if args.inhousesequences==None:
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'enterobacteriaceae',enterobacteriaceaedbpath,str(args.threads),outputpath,'ncbi',sourcedir])
@@ -135,4 +114,37 @@ else:
         runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
     runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,'user',str(args.typing),'enterobacteriaceae', 'gram_positive'])
 
+
+
+
+
+###OLD CODE
+
+
+#typing_group.add_argument('--enterobacdbpath', help='Path to the "enterobacteriaceae" plasmidfinder BLAST database (default: databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb)',required=False)
+#typing_group.add_argument('--gramposdbpath', help='Path to the "gram_positive" plasmidfinder BLAST database (default: databases/plasmidfinder/gram_positive/gram_positivedb)',required=False)
+#typing_group.add_argument('--rmlstdbpath', help='Path to the directory used to store the rmlst blast database files (default: databases/rmlstalleles/blastdbs)',required=False)
+#typing_group.add_argument('--rmlstprofilepath', help='Path to the directory used to store the rmlst profile file (default: databases/rmlstalleles)',required=False)
+
+
+# if args.enterobacdbpath==None:
+#     enterobacteriaceaedbpath='%s/databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb'%sourcedir
+# else:
+#     enterobacteriaceaedbpath=str(args.enterobacdbpath)
+    
+# if args.gramposdbpath==None:
+#     gram_positivedbpath='%s/databases/plasmidfinder/gram_positive/gram_positivedb'%sourcedir
+# else:
+#     gram_positivedbpath=str(args.gramposdbpath)
+      
+
+# if args.rmlstdbpath==None:
+#     rmlstdbpath='%s/databases/rmlstalleles/blastdbs'%sourcedir
+# else:
+#     rmlstdbpath=str(args.rmlstdbpath)
+
+# if args.rmlstprofilepath==None:
+#     rmlstprofilepath='%s/databases/rmlstalleles'%sourcedir
+# else:
+#     rmlstprofilepath=str(args.rmlstprofilepath)
 

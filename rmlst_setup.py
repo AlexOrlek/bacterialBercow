@@ -48,7 +48,7 @@ class RmlstRest(object):
             self.profile = decoded['schemes']
         else:
             logging.error('ERROR: Could not find URLs for rMLST download, they may have moved. Please open an issue '
-                          'at https://github.com/OLC-Bioinformatics/ConFindr/issues and we\'ll get things sorted out.')
+                          'at https://github.com/AlexOrlek/bacterialBercow/issues and I\'ll get things sorted out.')
             quit(code=1)
 
     def download_loci(self):
@@ -78,7 +78,7 @@ class RmlstRest(object):
                 
         else:
             logging.error('ERROR: Could not find URLs for rMLST download, they may have moved. Please open an issue '
-                          'at https://github.com/OLC-Bioinformatics/ConFindr/issues and we\'ll get things sorted out.')
+                          'at https://github.com/AlexOrlek/bacterialBercow/issues and I\'ll get things sorted out.')
             quit(code=1)
 
     def download_profile(self):
@@ -187,7 +187,7 @@ def create_gene_allele_file(profiles_file, gene_allele_file):
             f.write('\n')
 
 
-def setup_confindr_database(output_folder, consumer_secret):
+def setup_rmlst_database(output_folder, consumer_secret):
     # Remove previous output folder if it existed.
     if os.path.isdir(output_folder):
         logging.info('Removing old databases...')
@@ -204,32 +204,10 @@ def setup_confindr_database(output_folder, consumer_secret):
     rmlst_rest.download_loci()
     rmlst_rest.download_profile()
 
-    # # With the sequences downloaded, make a file of all rMLST sequences combined.
-    # logging.info('Combining rMLST files...')
-    # with open(os.path.join(output_folder, 'rMLST_combined.fasta'), 'w') as f:
-    #     locus_files = sorted(glob.glob(os.path.join(output_folder, 'BACT*.tfa')))
-    #     for locus_file in locus_files:
-    #         for record in SeqIO.parse(locus_file, 'fasta'):
-    #             record.id = record.id.replace('-', '_')
-    #             record.seq._data = record.seq._data.replace('-', '').replace('N', '')
-    #             record.name = ''
-    #             record.description = ''
-    #             SeqIO.write(record, f, 'fasta')
-    #         # Clean up individual file.
-    #         try:
-    #             os.remove(locus_file)
-    #         except OSError:
-    #             logging.warning('WARNING: Could not delete {}. This won\'t affect ConFindr performance, but '
-    #                             ' you may want to delete it to save on disk space.'.format(locus_file))
-
-    #logging.info('Assigning alleles to genera...')
-    # Parse profiles so that we know what alleles are found with each genus.
-    #create_gene_allele_file(profiles_file=os.path.join(output_folder, 'profiles.txt'),
-    #                        gene_allele_file=os.path.join(output_folder, 'gene_allele.txt'))
 
     logging.info('Make blast databases...')
     # For each locus fasta file create a blast database (save in blastdb sub-folder).
-    cmdArgs=['bash', '%s/makeblastdbs.sh'%sourcedir,output_folder]
+    cmdArgs=['bash', '%s/makeblastdbs.sh %s %s'%(sourcedir,output_folder,'rmlst')]
     subprocess.call(cmdArgs)
 
 
@@ -240,42 +218,28 @@ def main():
                         level=logging.INFO,
                         datefmt='%Y-%m-%d %H:%M:%S')
     parser = argparse.ArgumentParser()
-    #parser.add_argument('-o', '--output_folder',
-    #                    default=os.environ.get('CONFINDR_DB', os.path.expanduser('~/.confindr_db')),
-    #                    help='Path to download databases to - if folder does not exist, will be created. If folder does '
-    #                         'exist, will be deleted and updated sequences downloaded. Defaults to ~/.confindr_db, or '
-    #                         'the CONFINDR_DB environmental variable.')
     parser.add_argument('-s', '--secret_file',
                         type=str,
                         required=True,
                         help='Path to consumer secret file for rMLST database.')
-    parser.add_argument('-o', '--output_folder',
-                        default='%s/databases/rmlstalleles'%sourcedir,
-                        help='Path to download databases to - if folder does not exist, will be created. If folder does '
-                             'exist, will be deleted and updated sequences downloaded. Defaults to databases/rmlstalleles')
+    #parser.add_argument('-o', '--output_folder',
+    #                    default='%s/databases/rmlstalleles'%sourcedir,
+    #                    help='Path to download databases to - if folder does not exist, will be created. If folder does '
+    #                         'exist, will be deleted and updated sequences downloaded. Defaults to databases/rmlstalleles')
     args = parser.parse_args()
-    setup_confindr_database(args.output_folder,
+    output_folder='%s/databases/rmlstalleles'%sourcedir
+    setup_rmlst_database(output_folder,
                             args.secret_file)
-    #download_mash_sketch(args.output_folder)  ###not downloading mash sketch
+    #download_mash_sketch(output_folder)  ###not downloading mash sketch
     current_year = datetime.datetime.utcnow().year
     current_month = datetime.datetime.utcnow().month
     current_day = datetime.datetime.utcnow().day
-    with open(os.path.join(args.output_folder, 'download_date.txt'), 'w') as f:
+    with open(os.path.join(output_folder, 'download_date.txt'), 'w') as f:
         f.write('{}-{}-{}'.format(current_year, current_month, current_day))
-    ###logging.info('Done downloading ConFindr databases!')
-    logging.info('Done downloading rmlst database!')
+    logging.info('Finished downloading rmlst database!')
     
     
 if __name__ == '__main__':
     main()
 
 
-
-
-###CODE NOT USED
-
-    
-#def download_mash_sketch(output_folder):
-#    logging.info('Downloading mash refseq sketch...')
-#    urllib.request.urlretrieve('https://github.com/OLC-Bioinformatics/ConFindr/raw/master/refseq_sketch/refseq.msh',
-#                               os.path.join(output_folder, 'refseq.msh'))

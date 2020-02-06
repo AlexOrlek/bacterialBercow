@@ -26,26 +26,24 @@ __Characterising in-house bacterial sequence assemblies__:<br>
 bacterialBercow also allows users to characterise their own in-house assembled sequences, using plasmid replicon typing and rMLST typing. This can help in distinguising plasmid and chromosomal sequences. Furthermore, plasmid replicon typing and rMLST have applications in plasmid epidemiology and bacterial speciation, respectively (see "Why use bacterialBercow?" for details).<br>
 
 __Why use bacterialBercow__?<br>
-[PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) is an online database of curated plasmids, updated every ~3 months, so this is an easy way to get hold of NCBI plasmid sequences, and as an online database it comes with nice interactive features. However, there are reasons why you may want to use bacterialBercow instead (see [FAQ](#faq) for details). Notably, bacterialBercow is useful if you want to:
+[PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) is an online database of curated plasmids, updated every ~3 months, so this is an easy way to get hold of NCBI plasmid sequences, and as an online database it comes with nice interactive features. Associated code is also available [here](https://github.com/VGalata/plsdb). However, there are reasons why you may want to use bacterialBercow for plasmid retrieval/curation (see [FAQ](#faq) for details). In addition, bacterialBercow is useful if you want to:
 * Characterise in-house (user-provided) sequences that have not yet been uploaded to NCBI, using replicon typing and rMLST typing, respectively, to help distinguish plasmid and non-plasmid (chromosomal or [chromid](https://www.ncbi.nlm.nih.gov/pubmed/20080407)) sequence.
 * Conduct standalone plasmid replicon typing or rMLST typing: as well as rMLST loci being useful markers of non-plasmid sequence, the rMLST typing scheme can be used to determine bacterial species ([Larsen _et al._ 2014](https://www.ncbi.nlm.nih.gov/pubmed/24574292)), given a complete chromosome (and it may be possible to determine species or genus-level taxonomic information from incomplete chromosomal sequence, if sufficient rMLST loci are represented). As far as I know, there are currently no other command-line tools for rMLST-based taxonomy (only the [rMLST website](https://pubmlst.org/rmlst/)). Plasmid replicon typing also has useful applications; it is used as a marker of plasmid sequence (although a genuine plasmid may lack a replicon locus), and replicon types may provide insight into plasmid epidemiology ([Orlek _et al._ 2017](https://www.ncbi.nlm.nih.gov/pubmed/28232822)).
-* Distinguish interesting cases of identical plasmids that are likely to represent plasmid transmission (instead of simply deduplicating all identical sequences).
-* Retrieve the most up-to-date set of plasmids from NCBI.
-* Check the curation process at each step (which sequences are being excluded and why); and use this to fine-tune curation methods if desired. 
 
 
 # Requirements
 
 
 * Linux or MacOS (with the [Bash shell](https://en.wikibooks.org/wiki/Bash_Shell_Scripting#What_is_Bash?), which is the default shell on MacOS and many Linux distributions)
-* [Python](https://www.python.org/) 3 is required for the `database_setup.py` executable (tested using Python 3.5); the `order.py` executable works with Python 2 (tested with Python 2.7) or Python 3
+* [Python](https://www.python.org/). Python 3 or Python 2.
+* Ensure the following Python packages are installed: [Biopython](https://biopython.org/wiki/Download) and [Rauth](https://rauth.readthedocs.io/en/latest/).
 * [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK52640/#_chapter1_Installation_) (tested using version 2.6.0)
 * [edirect](https://www.ncbi.nlm.nih.gov/books/NBK179288/)
 * A computer with a stable internet connection via the HTTPS protocol - required for retrieving data from NCBI.
 * [bioawk](https://github.com/lh3/bioawk)
-* The [rMLST database](https://pubmlst.org/rmlst/) (follow installation instructions below)
+* The [rMLST database](https://pubmlst.org/rmlst/) (follow installation instructions below - DO NOT try to install yourself since the installation script provided must be run to get the database in the required format)
+* The [PlasmidFinder database](https://bitbucket.org/genomicepidemiology/plasmidfinder/src/master/) (follow installation instructions below - DO NOT try to install yourself since the installation script provided must be run to get the database in the required format)
 
-Note, the [PlasmidFinder](https://bitbucket.org/genomicepidemiology/plasmidfinder_db) database for replicon typing is included in the repository (retrieved 9th-Apr-2019). Both "enterobacteriaceae" and "gram_positive" components of the database are included. You can use a more recent version of PlasmidFinder if you wish (see [Options and usage](#Options-and-usage)).
 
 # Installation
 
@@ -55,7 +53,7 @@ First install the repository:<br>
 git clone https://github.com/AlexOrlek/bacterialBercow.git
 cd bacterialBercow
 ```
-You should find the executable scripts (`order.py` and `database_setup.py`) within the repository directory. If you add the path of this directory to your [$PATH variable](https://www.computerhope.com/issues/ch001647.htm), then bacterialBercow can be run by calling the executable scripts e.g. `order.py [`*`arguments...`*`]` from any directory location.
+You should find the executable scripts (`order.py`, `rmlst_setup.py` and `plasmidfinder_setup.py`) within the repository directory. If you add the path of this directory to your [$PATH variable](https://www.computerhope.com/issues/ch001647.htm), then bacterialBercow can be run by calling the executable scripts e.g. `order.py [`*`arguments...`*`]` from any directory location.
 
 __Installing the rMLST database__:
 
@@ -71,13 +69,22 @@ efKXmqp2D0EBlMBkZaGC2lPf
 F$M+fQ2AFFB2YBDfF9fpHF^qSWJdmmN%L4Fxf5Gur3
 ```
 
-* Install the database by running the `database_setup.py` executable (with Python 3 set as your default Python version), providing the `-s` flag with the file containing the secret id and secret:<br>
+* Install the database by running the `rmlst_setup.py` executable, providing the `-s` flag with the file containing the secret id and secret:<br>
 
 ```bash
-database_setup.py -s secretfile.txt
+rmlst_setup.py -s secretfile.txt
 ```
 
 * Follow the instructions that appear on screeen. The rMLST database will be installed in the databases directory within the repository.
+
+
+__Installing the PlasmidFinder database__:
+
+* Install the database by running the `plasmidfinder_setup.py` executable:<br>:
+
+```bash
+plasmidfinder_setup.py
+```
 
 
 
@@ -116,7 +123,6 @@ The `--deduplicationmethod` flag specifies how identical sequences should be ded
 __Replicon typing and rMLST typing options__:<br>
 By default, the number of threads is 1, but multi-threading is recommended to reduce the computing time of the BLAST searches; the number of threads to use is specified using the `-t` flag; the value must not exceed the number of threads available on your machine.<br>
 The `--typing` flag is applicable if the `--inhousesequences` flag is provided. By default both replicon and rMLST typing will be conducted on in-house sequences, but a user can specify only `replicon` typing or only `rmlst` typing. For accessions retrieved from NCBI, both replicon and rMLST typing are performed.<br>
-`--enterobacdbpath` and `--gramposdbpath` flags can be provided with paths to your own PlasmidFinder enterobacteriaceae and gram_positive BLAST databases (created by running the `makeblastdb` command on the FASTA files using [command line BLAST](https://www.ncbi.nlm.nih.gov/books/NBK279688/)).<br>
 
 
 __Pipeline step options specifying starting and stopping points__:<br>
@@ -208,6 +214,7 @@ I previously published a similar method for plasmid curation ([Orlek _et al._ 20
     [Galata _et al._ (2018)](https://academic.oup.com/nar/article/47/D1/D195/5149885) created [PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) using methods similar to those of the bacterialBercow pipeline. However, methods of Galata _et al._ differ somewhat; notably:
     * Although rMLST loci are used to filter chromosomal sequences, in contrast to methods of bacterialBercow, sequences with up to 5 rMLST loci are included in the database. However, according to a recent review article ([di Cenzo & Finan 2017](https://mmbr.asm.org/content/81/3/e00019-17)), a plasmid-like sequence encoding one or more ribosomal loci should actually be considered a "chromid", which is biologically distinct from a plasmid ([Harrison _et al._ 2010](https://www.ncbi.nlm.nih.gov/pubmed/20080407)). bacterialBercow makes a distinction between plasmids and chromids whereas PLSDB does not.
     * PLSDB excludes all duplicate sequences (any sequences with a [mash distance](https://mash.readthedocs.io/en/latest/index.html) of 0). By default, bacterialBercow excludes identical sequences except those derived from a different BioSample and with different BioProject and submitter metadata details. The latter may represent interesting cases of transmission of short conserved plasmids. Information on all duplicates is recorded in identicalaccessions.tsv.
+    * BacterialBercow records excluded accessions, allowing you to understand what's happening at each step of the curation process (this is not possible with PLSDB code as far as I know). In addition, BacterialBercow allows more flexibility. For example, you can specify date ranges and taxonomic scope, and there are options to run only part of the curation pipeline (this can be useful if, for instance, you just wish to update an existing database). For details see [Options and usage](#Options-and-usage).
 * **Are there any caveats I should be aware of when using bacterialBercow?**
     * Characterising sequences using plasmid replicon typing and rMLST can help towards their categorisation (as plasmid / chromosome / chromid). For example, a sequence encoding >50 rMLST loci is likely to be a complete or near-complete chromosome ([Jolley _et al._ 2012](https://mic.microbiologyresearch.org/content/journal/micro/10.1099/mic.0.055459-0#tab2)). Likewise, any sequence with one or more rMLST loci is either a chromid or chromosomal sequence. However, the typing results should be interpreted cautiously. Absence of a replicon locus does not imply that a sequence is chromosomal, since some plasmids are reported to contain no known replicon locus. A chromid is a plasmid-like sequence that may encode a replicon locus as well as some essential bacterial genes ([di Cenzo & Finan 2017](https://mmbr.asm.org/content/81/3/e00019-17)). rMLST loci (which encode ribosomal proteins) are not the only group of essential genes ([Gil _et al._ 2004](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC515251/)); therefore, absence of rMLST loci does not necessarily mean that a sequence is a plasmid - it could be a chromid sequence encoding other essential genes. Future versions of bacterialBercow could incorporate more comprehensive sets of bacterial core genes in order to better distinguish chromid sequences.
     * When running the complete pipeline, bacterialBercow retrieves plasmid metadata from NCBI, including plasmid topology information (circular / linear). Ideally, a plasmid annotated as 'complete' and 'linear' should be a genuine linear plasmid, but the topology annotation should probably be treated cautiously, particularly since linear is the [default value when submitting to NCBI](https://www.ncbi.nlm.nih.gov/books/NBK293904/); also, a 'linear' plasmid could represent a circular plasmid that failed to circularise after assembly.
