@@ -29,9 +29,9 @@ for filename in gramposfastas:
             SeqIO.write(seq_record,f2,'fasta')
 
 #make blast databases
-cmdArgs=['bash', '%s/makeblastdbs.sh %s %s'%(sourcedir,output_folder,'enterobacteriaceae')]
+cmdArgs=['bash', '%s/makeblastdbs.sh'%sourcedir, '%s'%output_folder, 'enterobacteriaceae']
 subprocess.call(cmdArgs)
-cmdArgs=['bash', '%s/makeblastdbs.sh %s %s'%(sourcedir,output_folder,'gram_positive')]
+cmdArgs=['bash', '%s/makeblastdbs.sh'%sourcedir, '%s'%output_folder, 'gram_positive']
 subprocess.call(cmdArgs)
 
 

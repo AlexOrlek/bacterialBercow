@@ -68,17 +68,22 @@ if args.inhousesequences==None and args.restartwithsequences==False:
         else:
             datepresent=="present"
         runsubprocess(['bash','%s/downloadaccessions.sh'%sourcedir,datepresent,str(args.taxonomyquery),str(args.datequery),str(args.dbsource),outputpath])
+        print('Retrieved accessions from NCBI')
         runsubprocess(['python','%s/filteraccessions.py'%sourcedir,outputpath])
+        print('Finished initial filtering of accessions based on accession title text')
     else:
         runsubprocess(['bash','%s/downloaduseraccessions.sh'%sourcedir,str(args.accessions),outputpath])
+        print('Retrieved accessions from NCBI')
         runsubprocess(['python','%s/filteraccessions.py'%sourcedir,outputpath])
+        print('Finished initial filtering of accessions based on accession title text')
     ###retrieve sequences if args.retrieveaccessionsonly is false    
     if args.retrieveaccessionsonly==True:
         sys.exit()
     else:
         runsubprocess(['bash','%s/downloadsequences.sh'%sourcedir,str(args.batchsize),str(args.emailaddress),outputpath])
+        print('Downloaded sequences from NCBI')
         runsubprocess(['python','%s/deduplicateseqs.py'%sourcedir,str(args.deduplicationmethod),outputpath])
-        
+        print('Deduplicated sequences using deduplication method: %s'%str(args.deduplicationmethod))
 
 
 if args.retrieveaccessionsonly==True:
@@ -101,20 +106,26 @@ rmlstprofilepath='%s/databases/rmlstalleles'%sourcedir
 
 if args.inhousesequences==None:
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'enterobacteriaceae',enterobacteriaceaedbpath,str(args.threads),outputpath,'ncbi',sourcedir])
+    print('Finished BLAST searching Enterobacteriaceae PlasmidFinder database')
     runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'gram_positive',gram_positivedbpath,str(args.threads),outputpath,'ncbi',sourcedir])
+    print('Finished BLAST searching Gram-positive PlasmidFinder database')
     runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'ncbi',sourcedir])
+    print('Finished BLAST searching rMLST database')
     runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath, 'ncbi','enterobacteriaceae', 'gram_positive'])
 else:
     cmdArgs=["cat %s | bioawk -c fastx '{print $name,length($seq)}' > %s/seqlengths.tsv"%(str(args.inhousesequences),outputpath)]
     runsubprocess(cmdArgs,shell=True)
     if args.typing=='replicon' or args.typing=='both':
         runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'enterobacteriaceae',enterobacteriaceaedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
+        print('Finished BLAST searching Enterobacteriaceae PlasmidFinder database')
         runsubprocess(['python', '%s/plasmidfinder.py'%sourcedir,'gram_positive',gram_positivedbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
+        print('Finished BLAST searching Gram-positive PlasmidFinder database')
     if args.typing=='rmlst' or args.typing=='both':
         runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
+        print('Finished BLAST searching rMLST database')
     runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,'user',str(args.typing),'enterobacteriaceae', 'gram_positive'])
 
-
+print('Finished running bacterialBercow!')
 
 
 

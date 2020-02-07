@@ -138,14 +138,14 @@ deduplicatebymetadata=False #deduplicate all identical accessions
 f2=open('%s/accessions_filtered_deduplicated.fa'%outdir,'w')
 f3=open('%s/identicalaccessions.tsv'%outdir,'w')
 f3.write('Accessions\tRefseq_Accessions\tGenbank_Accessions\tBiosamples\tSubmitter_Names\tOwners\tBioProjects\tUnique_Biosamples\tUnique_Names\tUnique_Owners\tUnique_BioProjects\tNum_Accessions\tNum_Refseq_Accessions\tNum_Genbank_Accessions\tNum_Unique_Biosamples\tNum_Unique_Names\tNum_Unique_Owners\tNum_Unique_BioProjects\tSame_Biosample\tSame_Submitter_Name\tSame_Owner\tSame_BioProject\tAccessions_Deduplicatedby_Metadata\tAccessions_Deduplicatedby_BioProject\tAccessions_Deduplicatedby_Metadata_BioProject\n')
-for seq, values in plasmiddict.iteritems():
+for seq, values in plasmiddict.items():
     if len(values)>1: #multiple accessions for a given sequence
-        accessions=map(operator.itemgetter(0), values)
-        accessiontypes=map(operator.itemgetter(1), values)
-        biosamples=map(operator.itemgetter(2), values)
-        names=map(operator.itemgetter(3), values)
-        owners=map(operator.itemgetter(4), values)
-        bioprojects=map(operator.itemgetter(5), values)
+        accessions=list(map(operator.itemgetter(0), values))
+        accessiontypes=list(map(operator.itemgetter(1), values))
+        biosamples=list(map(operator.itemgetter(2), values))
+        names=list(map(operator.itemgetter(3), values))
+        owners=list(map(operator.itemgetter(4), values))
+        bioprojects=list(map(operator.itemgetter(5), values))
         #group accessions by metadata - if they have either the same biosample accession or the same name (ignoring missing info), they are assigned the same group
         #problem: may have different biosample and name not provided - this would lead to different group but maybe should be more leniant and require both to be different? Yes - name / lab group info is the right idea - just need to make sure it's there (lab group would be better?)
         #reason for both requiring to be different: could have same lab group but copy pasting sequence with different biosample names; could have same biosample being sequenced / used by different lab groups.
@@ -354,7 +354,7 @@ f3.close()
 # f2=open('%s/accessions_filtered_deduplicated.fa'%outdir,'w')
 # f3=open('%s/duplicateaccessions.tsv'%outdir,'w')
 # f3.write('Accessions\tUnique_Biosamples\tUnique_Dates\tNum_Accessions\tIs_Biosample_Same\n')
-# for seq, values in plasmiddict.iteritems():
+# for seq, values in plasmiddict.items():
 #     if len(values)>1: #multiple accessions for a given sequence
 #         accessions=map(operator.itemgetter(0), values)
 #         accessiontypes=map(operator.itemgetter(1), values)
@@ -409,7 +409,7 @@ f3.close()
 # f2=open('%s/accessions_filtered_deduplicated.fa'%outdir,'w')
 # f3=open('%s/accessions_filtered_duplicate.tsv'%outdir,'w')
 # f3.write('Accessions\tNum_Accessions\tIs_Biosample_Same\n')
-# for seq, values in plasmiddict.iteritems():
+# for seq, values in plasmiddict.items():
 #     if len(values)>1: #multiple accessions for a given sequence
 #         accessions=map(operator.itemgetter(0), values)
 #         accessiontypes=map(operator.itemgetter(1), values)
@@ -483,7 +483,7 @@ f3.close()
 
 # #earliestdates={}
 # deduplicatedaccessions=[]
-# for indx, (key, values) in enumerate(plasmid_dict.iteritems()):
+# for indx, (key, values) in enumerate(plasmid_dict.items()):
 #     if len(values)>1:
 #         fileObj.write('%s\n' % key[0:50])
 #         features=[]
@@ -959,7 +959,7 @@ counter4=0
 counter5=0
 
 deduplicatedaccessions=[]
-for indx, (key, values) in enumerate(plasmid_dict.iteritems()):
+for indx, (key, values) in enumerate(plasmid_dict.items()):
     if len(values)>1:  
         features=[]
         accessions=[]
@@ -1101,7 +1101,7 @@ subprocess.call(cmdArgs)
 
 """
 deduplicatedaccessions=[]
-for indx, (key, values) in enumerate(plasmid_dict.iteritems()):
+for indx, (key, values) in enumerate(plasmid_dict.items()):
     if len(values)>1:  
         features=[]
         accessions=[]

@@ -207,7 +207,7 @@ def setup_rmlst_database(output_folder, consumer_secret):
 
     logging.info('Make blast databases...')
     # For each locus fasta file create a blast database (save in blastdb sub-folder).
-    cmdArgs=['bash', '%s/makeblastdbs.sh %s %s'%(sourcedir,output_folder,'rmlst')]
+    cmdArgs=['bash', '%s/makeblastdbs.sh'%sourcedir, '%s'%output_folder, 'rmlst']
     subprocess.call(cmdArgs)
 
 
