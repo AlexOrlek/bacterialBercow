@@ -573,7 +573,10 @@ def rmlsttypingalleles(rmlstalleles, rmlstprofileoutput):
         assert len(myallele)==2
         mylocus=myallele[0]
         myallele=myallele[1]
-        myalleledict[mylocus]=myallele
+        if mylocus in myalleledict:
+            myalleledict[mylocus].append(myallele)
+        else:
+            myalleledict[mylocus]=[myallele]
     myalleles=[] #alleles in order of locus column heading ie. corresponding to allele profile order
     for locus in loci:
         try:
@@ -581,7 +584,7 @@ def rmlsttypingalleles(rmlstalleles, rmlstprofileoutput):
         except:
             myalleles.append('N')
     #assert len(myalleles)==53
-    
+
     ###get top match(es)
     nummatches=[]
     for profile in profiles:
@@ -589,8 +592,14 @@ def rmlsttypingalleles(rmlstalleles, rmlstprofileoutput):
         for myallele,profileallele in zip(myalleles,profile):
             if myallele=='N':
                 continue
-            if myallele==profileallele:
-                matches.append(myallele)
+            #if there is a contaminant locus (multiple alleles), record, but still see if one allele matches
+            if len(myallele)>1:
+                for mymultipleallele in myallele:
+                    if mymultipleallele==profileallele:
+                        matches.append(mymultipleallele)
+            else:
+                if myallele[0]==profileallele:
+                    matches.append(myallele[0])
         nummatches.append(len(matches))
 
     topmatches=max(nummatches)
@@ -625,13 +634,32 @@ def rmlsttypingalleles(rmlstalleles, rmlstprofileoutput):
     topmismatchcounter=0
     topmissinglocicounter=0
     for x,y  in zip(myalleles, topprofile):
-        if x==y:
-            topmatchcounter=topmatchcounter+1  #this include N==N-based matches
-        elif x=='N':
-            topmissinglocicounter=topmissinglocicounter+1
-        else:
-            topmismatchcounter=topmismatchcounter+1
-        
-    return(str(species),str(toprst),str(topmatchcounter),str(topmismatchcounter),str(topmissinglocicounter),str('|'.join(rmlstalleles))) #top species, top rST, num_matches, num_mismatches, num_missingloci
+        if y=='N':
+            continue
+        if len(x)>1: #multple alleles detected, so it cannot = N, so don't need to add to missingloci counter; either at least one allele matches or none match in which case it's a mismatch
+            matchfound=False
+            for mymultipleallele in x:
+                if mymultipleallele==y and mymultipleallele!='N' and matchfound==False: #this excludes N==N-based matches
+                    topmatchcounter=topmatchcounter+1
+                    matchfound=True
+            if matchfound==False:
+                topmismatchcounter=topmismatchcounter+1
+        else:    
+            if x[0]==y and x[0]!='N': #this excludes N==N-based matches
+                topmatchcounter=topmatchcounter+1  
+            elif x[0]=='N':
+                topmissinglocicounter=topmissinglocicounter+1
+            else:
+                topmismatchcounter=topmismatchcounter+1
+
+    ###get multi-allelic loci (potential contaminants)
+    contaminantloci=[]
+    for indx,myallele in enumerate(myalleles):
+        if topprofile[indx]=='N' or myallele=='N':
+            continue
+        if len(myallele)>1:
+            contaminantloci.append({loci[indx]:myallele})
+
+    return(str(species),str(toprst),str(topmatchcounter),str(topmismatchcounter),str(topmissinglocicounter),str(len(contaminantloci)),str('|'.join(rmlstalleles))) #top species, top rST, num_matches, num_mismatches, num_missingloci, num_multiallelicloci,alleles
 
 

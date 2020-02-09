@@ -337,7 +337,7 @@ f2.close()
 f3.close()
 
 #write accessions_filtered_deduplicated.tsv
-f2=open('%s/accessions_filtered.tsv'%outdir,'w')
+f2=open('%s/accessions_filtered_deduplicated.tsv'%outdir,'w')
 with open('%s/accessions_filtered.tsv'%outdir) as f:
     for indx,line in enumerate(f):
         if indx==0:
