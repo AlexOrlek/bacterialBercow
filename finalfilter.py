@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 from Bio import SeqIO
 from pythonmods import inctyping, rmlstprofile,rmlsttypingalleles
 
@@ -8,12 +9,15 @@ outdir=sys.argv[2]
 sequenceorigin=sys.argv[3]
 if sequenceorigin=='ncbi':
     typing='both' #both replicon and rMLST typing are performed in order to curate NCBI sequences
-    plasmidfinderdatabases=sys.argv[4:]
-else:
+    plasmidfinderdatabases=sys.argv[4:6]
+else: #in-house
     typing=sys.argv[4]
-    plasmidfinderdatabases=sys.argv[5:]
-    
-#also need to include whether using inhouse sequences or ncbi (is there accessions_filtered file?) ? should be _deduplicated?
+    plasmidfinderdatabases=sys.argv[5:7]
+    contigcompletenessfile=sys.argv[-2]
+    contigsamplesfile=sys.argv[-1]
+
+
+#filtering depends on whether using ncbi or inhouse sequences, and if the latter, whether both rmlst and replicon typing have been conducted
 
 ###replicon typing
 if typing=='both' or typing=='replicon':
@@ -89,7 +93,7 @@ if typing=='both' or typing=='rmlst':
     for accession in rmlstaccessions:
         alleles=rmlstaccessionsdict[accession]
         rmlsttype=rmlsttypingalleles(alleles,rmlstprofileoutput)
-        rmlsttypedict[accession]=rmlsttype #a tuple of species, rST top match, num_matches, num_mismatches, num_missing loci, rmlstalleles
+        rmlsttypedict[accession]=rmlsttype #a tuple of top species, top rST, num_matches, num_mismatches, num_missing loci, rmlstalleles
 
 
 
@@ -98,43 +102,51 @@ if typing=='both' or typing=='rmlst':
 #output final files (dependent on sequenceorigin)
 
 if sequenceorigin=='ncbi':
-    ###non plasmid accessions; output tsv with rmlst and replicon typing info
+    ###non plasmid accessions; output tsv with rmlst and replicon typing info + contig_description ('chromosome' or 'chromosomal')
+    plasmidaccessions=[]
     f2=open('%s/nonplasmids.tsv'%outdir,'w')
-    f2.write('Accession\tTopology\tLength\tTitle\tCompleteness\tSpecies\tribosomalST\tNum_Matches\tNum_Mismatches\tNum_Missing_Loci\trMLST_alleles\tEnterobacteriaceae_Type\tProbe_Hits\tNum_Probe_hits\tGram_positive_Type\tProbe_Hits\tNum_Probe_hits\n')
-    with open('%s/accessions_filtered.tsv'%outdir) as f:
+    f2.write('Accession\tTopology\tLength\tTitle\tCompleteness\tSpecies\tribosomalST\tNum_Matches\tNum_Mismatches\tNum_Missing_Loci\trMLST_alleles\tEnterobacteriaceae_Type\tProbe_Hits\tNum_Probe_hits\tGram_positive_Type\tProbe_Hits\tNum_Probe_hits\tContig_Classification\n')
+    with open('%s/accessions_filtered_deduplicated.tsv'%outdir) as f:
         for indx, line in enumerate(f):
             if indx==0:
                 continue
             data=line.strip().split('\t')
             accession=data[0]
+            length=data[2]
             if accession in rmlstaccessions: #non plasmid accession
-                #get rmlst type
-                #species,rst,toprst,num_matches,num_mismatches,num_missingloci,rmlstalleles=rmlsttypedict[accession]
+                #get rmlst type, and typing stats
                 rmlsttype=rmlsttypedict[accession]
+                topspecies,toprst,num_matches,num_mismatches,num_missingloci,rmlstalleles=rmlsttype
                 #get replicon type
                 if accession in reptypedict:
                     reptype=reptypedict[accession]
                 else:
                     reptype=('-','-','-','-','-','-')
+                ###classify contig
+                if int(num_missingloci)<3 and int(length)>500000: #smallest bacterial genome is ~580Kb
+                    contigclass='chromosome'
+                else:
+                    contigclass='chromosomal'
                 #write to file
-                f2.write('%s\t%s\t%s\n'%('\t'.join(data),'\t'.join(rmlsttype),'\t'.join(reptype)))            
+                f2.write('%s\t%s\t%s\t%s\n'%('\t'.join(data),'\t'.join(rmlsttype),'\t'.join(reptype),contigclass))
+            else:
+                plasmidaccessions.append(accession)
     f2.close()
     ###plasmid accessions; output fasta and tsv with replicon typing info
+    #output fasta
     f2=open('%s/plasmids.fa'%outdir,'w')
-    plasmidaccessions=[]
     with open('%s/accessions_filtered_deduplicated.fa'%outdir) as f:
         for indx, seq_record in enumerate(SeqIO.parse(f,"fasta")):
             fastaheader=str(seq_record.id)
             accession=fastaheader.split(' ')[0].lstrip('>')
             if accession in rmlstaccessions:
                 continue
-            plasmidaccessions.append(accession)
             SeqIO.write(seq_record, f2, "fasta")
     f2.close()
-    
+    #output tsv
     f2=open('%s/plasmids.tsv'%outdir,'w')
     f2.write('Accession\tTopology\tLength\tTitle\tCompleteness\tEnterobacteriaceae_Type\tProbe_Hits\tNum_Probe_hits\tGram_positive_Type\tProbe_Hits\tNum_Probe_hits\n')
-    with open('%s/accessions_filtered.tsv'%outdir) as f:
+    with open('%s/accessions_filtered_deduplicated.tsv'%outdir) as f:
         for indx,line in enumerate(f):
             if indx==0:
                 continue
@@ -150,47 +162,176 @@ if sequenceorigin=='ncbi':
 
 
 else:
-    ###output tsv with rmlst and/or replicon typing info
+    ###output tsv with rmlst and/or replicon typing info + contig classification if rmlst is conducted
     #get seqlengths
     seqlengthdict={}
-    accessions=[]
+    contigs=[]
     with open('%s/seqlengths.tsv'%outdir) as f:
         for line in f:
             data=line.strip().split('\t')
-            accession=data[0]
-            length=data[1]
-            seqlengthdict[accession]=length
-            accessions.append(accession)
+            contig=data[0]
+            length=int(data[1])
+            seqlengthdict[contig]=length
+            contigs.append(contig)
     #write tsv
     f2=open('%s/typing.tsv'%outdir,'w')
-    header=['Accession','Length']
+    #first write column header
+    header=['Contig','Length']
     if typing=='both' or typing=='rmlst':
         header.extend(['Species','ribosomalST','Num_Matches','Num_Mismatches','Num_Missing_Loci','rMLST_alleles'])
     if typing=='both' or typing=='replicon':
         header.extend(['Enterobacteriaceae_Type','Probe_Hits','Num_Probe_hits','Gram_positive_Type','Probe_Hits','Num_Probe_hits'])
+    if typing=='both' or typing=='rmlst':
+        header.extend(['Contig_Classification'])
     header='\t'.join(header)
     f2.write('%s\n'%header)
-    for accession in accessions:
-        if typing=='both' or typing=='rmlst':
-            #get rmlst type
-            if accession in rmlsttypedict:
-                rmlsttype=rmlsttypedict[accession]
-            else:
-                rmlsttype=('-','-','-','-','-','-')
-        if typing=='both' or typing=='replicon':
+    #if only replicon typing is specified, write rep typing info to file, but don't attempt to classify contig
+    if typing=='replicon':
+        for contig in sorted(contigs):
             #get replicon types
-            if accession in reptypedict:
-                reptype=reptypedict[accession]
+            if contig in reptypedict:
+                reptype=reptypedict[contig]
             else:
                 reptype=('-','-','-','-','-','-')
-        #write to file
-        if typing=='both':
-            f2.write('%s\t%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(rmlsttype),'\t'.join(reptype)))
-        elif typing=='rmlst':
-            f2.write('%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(rmlsttype)))
+            #write to file
+            f2.write('%s\t%s\t%s\n'%(contig,seqlengthdict[contig],'\t'.join(reptype)))
+        f2.close()
+    else:
+        ###extract contig completeness info if available
+        contigcompletenessdict={}
+        if contigcompletenessfile!=None:
+            with open(contigsamplesfile) as f:
+                for indx,line in enumerate(f):
+                    data=line.strip().split('\t')
+                    contig=data[0].strip()
+                    completeness=data[1].strip()
+                    if contig not in contigs and indx==0:
+                        continue #assume header line
+                    if contig not in contigs:
+                        sys.exit('Error: contig name: %s does not match any fasta header names'%contig)
+                    if completeness.lower() in ['complete','circular','complete_linear']:
+                        completeness='complete'
+                    elif completeness.lower() in ['incomplete','linear','unknown']:
+                        completeness='incomplete'
+                    else:
+                        sys.exit('Error: un-recognised contig completeness annotation: %s'%completeness)
+                    contigcompletenessdict[contig]=completeness
+        ###iterate through samples if sample groupings are available (longest contig within sample likely to be chromosome)
+        if contigsamplesfile!=None:
+            samplecontigdict={}
+            with open(contigcompletenessfile) as f:
+                for indxa,line in enumerate(f):
+                    data=line.strip().split('\t')
+                    contig=data[0].strip()
+                    sample=data[1].strip()
+                    if contig not in contigs and indxa==0:
+                        continue #assume header line
+                    if contig not in contigs:
+                        sys.exit('Error: contig name: %s does not match any fasta header names'%contig)
+                    if sample in samplecontigdict:
+                        samplecontigdict[sample].append(contig)
+                    else:
+                        samplecontigdict[sample]=[]
+                        samplecontigdict[sample].append(contig)
+            #iterate through samples
+            for sample in sorted(samplecontigdict.keys()):
+                contigs=sorted(samplecontigdict[sample])
+                lengths=[]
+                for contig in contigs:
+                    lengths.append(seqlengthdict[contig])
+                indices=list(np.argsort(lengths))
+                indices.reverse()
+                contigs=[contigs[i] for i in indices] #contigs are now sorted in length order, starting with longest
+                lengths=[lengths[i] for i in indices]
+                #iterate through contigs, sorted by length
+                for indxb,(contig,length) in enumerate(zip(contigs,lengths)):
+                    if contig in rmlsttypedict:
+                        rmlsttype=rmlsttypedict[accession]
+                        topspecies,toprst,num_matches,num_mismatches,num_missingloci,rmlstalleles=rmlsttype
+                    else:
+                        rmlsttype=('-','-','-','-','-','-')
+                    if contig in contigcompletenessdict:
+                        contigcompleteness=contigcompletenessdict[contig]
+                    else:
+                        contigcompleteness='unknown'
+                    #check for chromosome contig: longest contig, rmlst typed with max 3 missing loci, longer than 500kb
+                    chromosomeclass=True
+                    if indxb==0 and topspecies!='-' and length>500000:
+                        if int(num_missingloci)<=3
+                            if contigcompleteness=='complete':
+                                contigclass='complete chromosome'
+                            else:
+                                contigclass='chromosome'
+                        else:
+                            chromosomeclass=False
+                    else:
+                        chromosomeclass=False
+                    #classify non-chromosome contigs
+                    if chromosomeclass==False:
+                        if topspecies!='-':
+                            if contigcompleteness=='complete':
+                                contigclass='chromid'
+                            else:
+                                contigclass='chromosomal'
+                        else:
+                            if contigcompleteness=='complete':
+                                contigclass='plasmid'
+                            else:
+                                contigclass='putative plasmid'
+                                
+                    ##write to file##
+                    if typing=='both':
+                        f2.write('%s\t%s\t%s\t%s\t%s\n'%(contig,length,'\t'.join(rmlsttype),'\t'.join(reptype),contigclass))
+                    if typing=='rmlst':
+                        f2.write('%s\t%s\t%s\t%s\n'%(contig,length,'\t'.join(rmlsttype),contigclass))
+                        
+        ###iterate through contigs if sample groupings are not available
         else:
-            f2.write('%s\t%s\t%s\n'%(accession,seqlengthdict[accession],'\t'.join(reptype)))
+            for contig in sorted(contigs):
+                length=seqlengthdict[contig]
+                if contig in rmlsttypedict:
+                    rmlsttype=rmlsttypedict[accession]
+                    topspecies,toprst,num_matches,num_mismatches,num_missingloci,rmlstalleles=rmlsttype
+                else:
+                    rmlsttype=('-','-','-','-','-','-')
+                if contig in contigcompletenessdict:
+                    contigcompleteness=contigcompletenessdict[contig]
+                else:
+                    contigcompleteness='unknown'
+                #check for chromosome contig: rmlst typed with max 3 missing loci, longer than 500kb
+                chromosomeclass=True
+                if length>500000 and topspecies!='-':
+                    if int(num_missingloci)<=3:
+                        if contigcompleteness=='complete':
+                            contigclass='complete chromosome'
+                        else:
+                            contigclass='chromosome'
+                    else:
+                        chromosomeclass=False
+                else:
+                    chromosomeclass=False
+                #classify non-chromosome contigs
+                if chromosomeclass!=False:
+                    if topspecies!='-':
+                        if contigcompleteness=='complete':
+                            contigclass='chromid'
+                        else:
+                            contigclass='chromosomal'
+                    else:
+                        if contigcompleteness=='complete':
+                            contigclass='plasmid'
+                        else:
+                            contigclass='putative plasmid'
+                
+                ##write to file##
+                if typing=='both':
+                    f2.write('%s\t%s\t%s\t%s\t%s\n'%(contig,length,'\t'.join(rmlsttype),'\t'.join(reptype),contigclass))
+                if typing=='rmlst':
+                    f2.write('%s\t%s\t%s\t%s\n'%(contig,length,'\t'.join(rmlsttype),contigclass))
+
+
     f2.close()
+
 
 
 

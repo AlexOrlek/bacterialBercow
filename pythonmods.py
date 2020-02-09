@@ -563,7 +563,7 @@ def rmlstprofile(profilepath):
 
 
 def rmlsttypingalleles(rmlstalleles, rmlstprofileoutput):
-    """takes a list of rmlst alleles and returns top matching species, rST, num_matches, num_mismatches, num_missingloci; information on other close matches; N.B num_matches/mismatches/missingloci is calculated after excluding 'N' alleles in the profile; but top matching species includes N-based matches (so if there are very few loci detected, the top match will be a profile with many N positions)"""
+    """takes a list of rmlst alleles and returns top matching species, top matching rST(s), num_matches, num_mismatches, num_missingloci; rMLST alleles detected. There may be multiple top matching species/rST (if there are equally good matches). If top species encompass multiple genera, then top genera are given. num_matches includes matches to allele 'N' in top rST profile i.e. cases where allele is missing in sample and in profile. num_mismtches doesn't include  missing loci which are recorded as N in top rST profile. num_missingloci doesn't include loci recorded as 'N' in profile"""
     import operator
     ###first extract profile information, and get list of my alleles in the same order as profiles, filling missing loci with 'N'
     loci,sts,profiles,genuses,species=rmlstprofileoutput
@@ -632,6 +632,6 @@ def rmlsttypingalleles(rmlstalleles, rmlstprofileoutput):
         else:
             topmismatchcounter=topmismatchcounter+1
         
-    return(str(species),str(toprst),str(topmatchcounter),str(topmismatchcounter),str(topmissinglocicounter),str('|'.join(rmlstalleles)))
+    return(str(species),str(toprst),str(topmatchcounter),str(topmismatchcounter),str(topmissinglocicounter),str('|'.join(rmlstalleles))) #top species, top rST, num_matches, num_mismatches, num_missingloci
 
 

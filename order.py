@@ -24,12 +24,15 @@ def batchsizeint(x):
     return x
 
 parser = argparse.ArgumentParser(description='bacterialBercow: bringing order to bacterial sequences',add_help=False)
+
 #Help options
 help_group = parser.add_argument_group('Help')
 help_group.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='Show this help message and exit.')
-#General options                                                                                                                                                         
+
+#General options                             
 general_group = parser.add_argument_group('General options')
 general_group.add_argument('-o','--out', help='Output directory (required)', required=True, type=str)
+
 #NCBI query and retrieval options
 ncbi_group = parser.add_argument_group('NCBI query and retrieval options')
 ncbi_group.add_argument('-e','--emailaddress', help="User's email address which will be provided as an argument to edirect econtact -email (required if retrieving data from NCBI)", required=False, type=str)
@@ -39,12 +42,15 @@ ncbi_group.add_argument('-s','--dbsource', help='Database source; refseq or refs
 ncbi_group.add_argument('--deduplicationmethod', help='Specify how identical sequences should be deduplicated; either "all" duplicates are removed; otherwise, duplicates are removed if they share biosample accession id + "submitter" metadata; or "bioproject" accession id; or "both" submitter metadata and bioproject accession id (default: "both")', default="both", choices=["both","submitter","bioproject","all"],type=str)
 ncbi_group.add_argument('-b','--batchsize', help='Number of accession nucleotide records to retrieve per edirect query (default: 200; min: 2; max: 500)', default=200, type=batchsizeint)
 
-
 #Replicon and rMLST typing options
 typing_group = parser.add_argument_group('Replicon and rMLST typing options')
 typing_group.add_argument('-t','--threads', help='Number of threads to use (default: 1)', default=1, type=positiveint)
 typing_group.add_argument('--typing', help='Specifies what sequence typing to perform (only applicable if in-house sequences are provided using --inhousesequences flag); either "replicon", "rmlst" typing or "both" (default: both)',default="both",choices=["both","replicon","rmlst"],required=False)
 
+#Contig information options
+contig_group = parser.add_argument_group('Options to specify files describing in-house contigs')
+contig_group.add_argument('--contigsamples', help='A tsv file containing contig names in the first column and associated sample names in the second column',required=False)
+contig_group.add_argument('--contigcompleteness', help='A tsv file containing contig names in the first column and contig completeness information in the second column (accepted contig completeness descriptions: circular,complete,complete_linear,linear,incomplete,unknown)',required=False)
 
 #Pipeline step customisation (specifying starting and stopping points)
 steps_group = parser.add_argument_group('Customising pipeline steps (specifying starting / stopping points)')
@@ -123,7 +129,7 @@ else:
     if args.typing=='rmlst' or args.typing=='both':
         runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
         print('Finished BLAST searching rMLST database')
-    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,'user',str(args.typing),'enterobacteriaceae', 'gram_positive'])
+    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,'user',str(args.typing),'enterobacteriaceae', 'gram_positive',str(args.contigcompleteness),str(args.contigsamples)])
 
 print('Finished running bacterialBercow!')
 

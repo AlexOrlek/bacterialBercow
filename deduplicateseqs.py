@@ -134,7 +134,7 @@ for indx, seq_record in enumerate(SeqIO.parse(fileObj,"fasta")):
 
 
 #write to file
-deduplicatebymetadata=False #deduplicate all identical accessions
+deduplicatedaccessions=[]
 f2=open('%s/accessions_filtered_deduplicated.fa'%outdir,'w')
 f3=open('%s/identicalaccessions.tsv'%outdir,'w')
 f3.write('Accessions\tRefseq_Accessions\tGenbank_Accessions\tBiosamples\tSubmitter_Names\tOwners\tBioProjects\tUnique_Biosamples\tUnique_Names\tUnique_Owners\tUnique_BioProjects\tNum_Accessions\tNum_Refseq_Accessions\tNum_Genbank_Accessions\tNum_Unique_Biosamples\tNum_Unique_Names\tNum_Unique_Owners\tNum_Unique_BioProjects\tSame_Biosample\tSame_Submitter_Name\tSame_Owner\tSame_BioProject\tAccessions_Deduplicatedby_Metadata\tAccessions_Deduplicatedby_BioProject\tAccessions_Deduplicatedby_Metadata_BioProject\n')
@@ -287,6 +287,7 @@ for seq, values in plasmiddict.items():
             if deduplicationmethod=="submitter": #choose one sequence per submitter metadata group
                 f2.write('>%s\n'%accession)
                 f2.write('%s\n'%seq)
+                deduplicatedaccessions.append(accession)
         for group in bioprojectgroupsset:
             indices=[indx for indx,g in enumerate(bioprojectgroups) if g==group] #get all indices that equal group
             if len(indices)>1: #multiple accessions for a given bioproject group - deduplicate by selecting refseq if available
@@ -301,6 +302,7 @@ for seq, values in plasmiddict.items():
             if deduplicationmethod=="bioproject": #choose one sequence per bioproject group
                 f2.write('>%s\n'%accession)
                 f2.write('%s\n'%seq)
+                deduplicatedaccessions.append(accession)
         for group in bothgroupsset:
             indices=[indx for indx,g in enumerate(bothgroups) if g==group] #get all indices that equal group
             if len(indices)>1: #multiple accessions for a given both group - deduplicate by selecting refseq if available
@@ -315,7 +317,7 @@ for seq, values in plasmiddict.items():
             if deduplicationmethod=="both": #choose one sequence per both group
                 f2.write('>%s\n'%accession)
                 f2.write('%s\n'%seq)
-                
+                deduplicatedaccessions.append(accession)
         if deduplicationmethod=="all": #choose one sequence across all duplicates irrespective of whether or not metadata/bioproject is shared
             myrefseqindices=[indx for indx,t in enumerate(accessiontypes) if t=='refseq']
             if len(myrefseqindices)>0: #if there's at least 1 refseq, select the first refseq accession
@@ -324,19 +326,33 @@ for seq, values in plasmiddict.items():
                 accession=accessions[0]
             f2.write('>%s\n'%accession)
             f2.write('%s\n'%seq)
-
+            deduplicatedaccessions.append(accession)
         f3.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'%('|'.join(accessions),'|'.join(refseqaccessions),'|'.join(genbankaccessions),'|'.join(biosamples),'|'.join(names),'|'.join(owners),'|'.join(bioprojects),'|'.join(biosamplesunique),'|'.join(namesunique),'|'.join(ownersunique),'|'.join(bioprojectsunique),len(accessions),numrefseqaccessions,numgenbankaccessions,len(biosamplesuniquenonmissing),len(namesuniquenonmissing),len(ownersuniquenonmissing),len(bioprojectsuniquenonmissing),samebiosample,samename,sameowner,samebioproject,'|'.join(metadatadeduplicatedaccessions),'|'.join(bioprojectdeduplicatedaccessions),'|'.join(bothdeduplicatedaccessions)))
     else: #1 accession for a given sequence
         accession=values[0][0]
         f2.write('>%s\n'%accession)
         f2.write('%s\n'%seq)
-
+        deduplicatedaccessions.append(accession)
 f2.close()
 f3.close()
 
+#write accessions_filtered_deduplicated.tsv
+f2=open('%s/accessions_filtered.tsv'%outdir,'w')
+with open('%s/accessions_filtered.tsv'%outdir) as f:
+    for indx,line in enumerate(f):
+        if indx==0:
+            f2.write(line)
+            continue
+        data=line.strip().split('\t')
+        accession=data[0]
+        if accession in deduplicatedaccessions:
+            f2.write(line)
+        
+f2.close()
 
 #OLD CODE - USING BIOSAMPLE AND CREATEDATE, AND TREATING "-" AS A DISTINCT BIOSAMPLE        
 
+#deduplicatebymetadata=False #deduplicate all identical accessions
 
 #metadatadict["NC_001735.4"][1]='alexorlekedit'
 #metadatadict["U67194.4"][1]='alexedit'

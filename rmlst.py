@@ -1,7 +1,6 @@
 import sys
 from pythonmods import runblastn, runsubprocess, mlstfilter
 
-#do blastn of accessions_filtered.fa file against rmlst database
 
 rmlstdbpath=sys.argv[1]
 threads=sys.argv[2]

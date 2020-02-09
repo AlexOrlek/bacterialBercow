@@ -12,7 +12,6 @@ if sequenceorigin=='ncbi':
 else:
     query=sys.argv[7]
 
-#do blastn of accessions_filtered.fa file against plasmidfinder database
 
 #run database search
 blastoutput='%s/plasmidfinder/BLASTtable_%s.tsv' %(outdir,database)
