@@ -1,6 +1,6 @@
 # bacterialBercow
 
-bacterialBercow is a command-line tool for retrieving and curating complete bacterial plasmids from the [NCBI nucleotide](https://www.ncbi.nlm.nih.gov/nucleotide/) database; and for characterising and classifying contigs from your own bacterial sequence assemblies. It is primarily intended for complete or near-complete assemblies.
+bacterialBercow is a command-line tool for retrieving and curating complete bacterial plasmids from the [NCBI nucleotide](https://www.ncbi.nlm.nih.gov/nucleotide/) database; and for characterising and classifying contigs from your own bacterial sequence assemblies.
 
 # Table of contents
 
@@ -22,16 +22,16 @@ bacterialBercow is a command-line tool for retrieving and curating complete bact
 The main functionalities of bacterialBercow are described below:<br>
 
 __Retrieving complete bacterial plasmids from NCBI__:<br>
-Retrieving complete plasmid sequences from the NCBI nucleotide database requires quality-filtering to exclude partial plasmid sequences, or chromosomal sequences mis-annotated as plasmids. I previously outlined methods to curate NCBI bacterial plasmids ([Orlek _et al_. 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183)). Following similar methods, bacterialBercow allows users to first retrieve putative complete bacterial plasmid sequences from NCBI, and then characterise these sequences by detecting plasmid [replicon loci](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and ribosomal multi-locus sequence typing ([rMLST](https://pubmlst.org/rmlst/)) loci ([Jolley _et al._ 2012](https://mic.microbiologyresearch.org/content/journal/micro/10.1099/mic.0.055459-0#tab2)). As a result, genuine complete plasmid sequences can be identified. bacterialBercow is not the only available tool for retrieving curated plasmid sequences. [PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) is an online database of curated plasmids, updated every ~3 months, so this is an easy way to get hold of NCBI plasmid sequences, and as an online database it comes with nice interactive features. Associated code is also available [here](https://github.com/VGalata/plsdb). However, there are reasons why you may want to use bacterialBercow for plasmid retrieval/curation (see [FAQ](#faq) for details).
-
-__Characterising bacterial sequence assemblies__:<br>
-bacterialBercow also allows users to characterise their own in-house assembled sequences, using [plasmid replicon typing](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and [rMLST typing](https://pubmlst.org/rmlst/). Plasmid replicon typing and rMLST have applications in plasmid epidemiology (see [Orlek _et al._ 2017](https://www.ncbi.nlm.nih.gov/pubmed/28232822)), and bacterial speciation, respectively. Given a complete chromosome, it is possible to determine bacterial species based on allelic variation at rMLST loci ([Larsen _et al._ 2014](https://www.ncbi.nlm.nih.gov/pubmed/24574292)). It may also be possible to determine species or genus-level taxonomic information from incomplete chromosomal sequence, if sufficient rMLST loci are represented. As far as I know, there are currently no other command-line tools for rMLST-based taxonomy (only the [rMLST website](https://pubmlst.org/rmlst/)).<br>
+Retrieving complete plasmid sequences from the NCBI nucleotide database requires quality-filtering to exclude partial plasmid sequences, or chromosomal sequences mis-annotated as plasmids. I previously outlined methods to curate NCBI bacterial plasmids ([Orlek _et al_. 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183)). Following similar methods, bacterialBercow allows users to first retrieve putative complete bacterial plasmid sequences from NCBI, and then characterise these sequences by detecting plasmid [replicon loci](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and ribosomal multi-locus sequence typing ([rMLST](https://pubmlst.org/rmlst/)) loci ([Jolley _et al._ 2012](https://mic.microbiologyresearch.org/content/journal/micro/10.1099/mic.0.055459-0#tab2)). rMLST loci can be used as markers of chromosomal sequence. As a result, chromosomal sequence misannotated as plasmid can be excluded and genuine complete plasmid sequences can be identified. bacterialBercow is not the only available tool for retrieving curated plasmid sequences. [PLSDB](https://ccb-microbe.cs.uni-saarland.de/plsdb) is an online database of curated plasmids, updated every ~3 months, so this is an easy way to get hold of NCBI plasmid sequences, and as an online database it comes with nice interactive features. Associated code is also available [here](https://github.com/VGalata/plsdb). However, there are reasons why you may want to use bacterialBercow for plasmid retrieval/curation (see [FAQ](#faq) for details).
 
 __Classifying contigs from complete/near-complete bacterial sequence assemblies as plasmid, chromosome, etc.__:<br>
-rMLST loci are useful markers of chromosomal sequence. Additional information such as contig length, source sample, and completeness (e.g. whether the contig assembled to form a complete circular sequence) can be used to help refine contig classification as plasmid, chromosome, [chromid](https://www.ncbi.nlm.nih.gov/pubmed/20080407), or incomplete chromosomal sequence. Chromids are secondary replicons which are intermediate between chromosomes and plasmids (e.g. unlike plasmids, they encode at least one essential gene, but on the other hand, they encode plasmid-like replication loci). If you are dealing with complete assemblies from bacterial taxa that tend not to harbour chromids, then assigning the longest contig as the chromosome and all other contigs as plasmids is reasonable. However, even with long-reads, bacterial assemblies may not be perfectly resolved such that one contig represents one replicon ([Wick 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5695209/)). bacterialBercow is a more robust approach for contig classification, and is especially useful when dealing with assemblies that are near-complete but not perfectly resoved, and/or when taxa are known to sometimes harbour chromids. As far as I know, there are currently no other automated tools for classifying contigs in complete/near-complete assemblies. Note that bacterialBercow is not intended for contig classification of fragmented assemblies (derived from short-read sequencing data). In this case, accurate classification of all contigs may not be achievable, although there are automated tools that aim to address this goal ([Arredondo-Alonso _et al._ 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5695206/)).
+As well as helping to classify/curate NCBI sequences, bacterialBercow can be used to classify in-house (user-provided) sequence assemblies. As above, rMLST loci can be used to help identify chromosomal sequence. Additional user-provided information, namely, source sample, and completeness (e.g. whether the contig assembled to form a complete circular sequence) can be used to help refine contig classification as plasmid, chromosome, [chromid](https://www.ncbi.nlm.nih.gov/pubmed/20080407), or incomplete chromosomal sequence. Chromids are secondary replicons which are intermediate between chromosomes and plasmids (e.g. unlike plasmids, they encode at least one essential gene, but on the other hand, they encode plasmid-like replication loci). If you are dealing with complete assemblies from bacterial taxa that tend not to harbour chromids, then assigning the longest contig as the chromosome and all other contigs as plasmids is reasonable. However, even with long-reads, bacterial assemblies may not be perfectly resolved such that one contig represents one replicon ([Wick 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5695209/)). bacterialBercow is a more robust approach for contig classification, and is especially useful when dealing with assemblies that are near-complete but not perfectly resoved, and/or when taxa are known to sometimes harbour chromids. As far as I know, there are currently no other automated tools for classifying contigs in complete/near-complete assemblies. Note that bacterialBercow is not intended for contig classification of fragmented assemblies (derived from short-read sequencing data). In this case, accurate classification of all contigs may not be achievable, although there are automated tools that aim to address this goal ([Arredondo-Alonso _et al._ 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5695206/)).
+
+__Characterising bacterial sequence assemblies__:<br>
+bacterialBercow also allows users to characterise their own in-house assembled sequences (both complete and fragmented assemblies), using [plasmid replicon typing](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4068535/) and [rMLST typing](https://pubmlst.org/rmlst/). Plasmid replicon typing and rMLST have applications in plasmid epidemiology (see [Orlek _et al._ 2017](https://www.ncbi.nlm.nih.gov/pubmed/28232822)), and bacterial speciation, respectively. As far as I know, there are currently no other command-line tools for rMLST-based taxonomy (only the [rMLST website](https://pubmlst.org/rmlst/)). Replicon typing and rMLST-based bacterial speciation can be conducted on fragmented assemblies as well as complete assemblies; bacterial species can be determined based on alleleic variation at rMLST loci ([Larsen _et al._ 2014](https://www.ncbi.nlm.nih.gov/pubmed/24574292)), even if loci are partitioned across contigs of a fragmented assembly. It may also be possible to determine species or genus-level taxonomic information from incomplete chromosomal sequence, if sufficient rMLST loci are represented.<br>
 
 __Detecting contamination__:<br>
-Included in the rMLST output is the number of multi-allelic loci. Generally MLST schemes are devised such that a chromosome will encode one allele per locus, so multi-allelic loci indicate potential cross-species or intra-species bacterial contamination. An existing tool called ConFindr is available for read-based contamination analysis using rMLST typing; read-based analysis may be more sensitive to low-level contamination, as descried in the paper ([Low _et al._ 2019](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6546082/)).
+Included in the rMLST output is the number of multi-allelic loci. Generally MLST schemes are devised such that a chromosome will encode one allele per locus, so multi-allelic loci indicate potential cross-species or intra-species bacterial contamination. An existing tool called ConFindr is available for read-based contamination analysis using rMLST typing ([Low _et al._ 2019](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6546082/)).
 
 
 # Requirements
@@ -103,15 +103,21 @@ To retrieve and curate a custom set of NCBI accessions:
 `order.py -e first.last@email.com --accessions accessions.txt -o output-directory`
 
 
-To characterise your own bacterial sequences using plasmid replicon typing and rMLST, provide an input multi-FASTA file:
+To characterise and classify your own bacterial sequences using plasmid replicon typing and rMLST, provide an input multi-FASTA file; optional files specifying contig completeness and contig sample affiliation can be provided to refine classification (using `--contigcompleteness` and `--contigsamples` flags respectively):
 
-`order.py --inhousesequences samples.fasta -o output-directory`
+`order.py --inhousesequences samples.fasta -o output-directory --contigcompleteness contigcompletenessfile.tsv --contigsamples contigsamplesfile.tsv`
 
+
+If you have a fragmented assembly (assembled from short-reads), then unambiguously classifying all contigs will not be possible. You can instead restrict contig ouput to include only contigs with a replicon or rMLST locus detected (`--typedcontigsonly`) and you can request output at the sample-level (`--sampleoutput`). In the case of fragmented assemblies, analysing at the sample-level is more informative in terms of rMLST speciation and picking up multi-allelic rMLST loci, so it's especially important to delimit sample groupings by providing the --contigsamples flag so that analysis can be conducted at the sample-level:
+
+`order.py --inhousesequences samples.fasta -o output-directory --contigsamples contigsamplesfie.tsv --typedontigsonly --sampleoutput`
 
 
 # Options and usage
 
-`order.py --help` produces a summary of all the options. All commands must include the `-o` flag specifying output directory. The other key flags are summarised below:
+`order.py --help` produces a summary of all the options. All commands must include the `-o` flag specifying output directory. The other key flags are summarised below:<br>
+
+By default, the number of threads is 1, but multi-threading is recommended to reduce the computing time of the BLAST searches; the number of threads to use is specified using the `-t` flag; the value must not exceed the number of threads available on your machine.<br>
 
 __NCBI query and retrieval options__:<br>
 A contact email address must be provided using the `-e` flag; this is so that NCBI have someone to notify in case the software causes problems for their server.<br>
@@ -122,28 +128,28 @@ The `--taxonomyquery` and `--datequery` flags allow the NCBI query to be customi
 The `-s` flag specifies which NCBI source database(s) to include; by default both Refseq and Genbank databases will be included (`refseq_genbank`) but Refseq only can be specified (`refseq`).<br>
 The `--deduplicationmethod` flag specifies how identical sequences should be deduplicated (see [Background and methods](#background-and-methods) and [FAQ](#faq) for details).<br>
 
-
-__Replicon typing and rMLST typing options__:<br>
-By default, the number of threads is 1, but multi-threading is recommended to reduce the computing time of the BLAST searches; the number of threads to use is specified using the `-t` flag; the value must not exceed the number of threads available on your machine.<br>
-The `--typing` flag is applicable if the `--inhousesequences` flag is provided. By default both replicon and rMLST typing will be conducted on in-house sequences, but a user can specify only `replicon` typing or only `rmlst` typing. For accessions retrieved from NCBI, both replicon and rMLST typing are performed.<br>
-
-__Options to specify files describing in-house contigs__:<br>
-Providing information about how contigs group according to source sample can improve contig classification. Specifically, a chromosome should be the longest contig in a sample. A tsv file containing contig names in the first column and associated sample names in the second column can be provided with the `--contigsamples` flag.
-Known information about contig completeness or circularity (e.g. as provided by assemblers such as Unicycler), can be included when classifying contigs. A tsv file containing contig names in the first column and contig completeness information in the second column can be provided with the `--contigcompleteness` flag. Contigs labelled as 'circular', 'complete', or 'complete_linear' will be considered to be complete sequences. Other accepted contig labels are 'linear','incomplete', and 'unknown'.
-
-
-__Pipeline step options specifying starting and stopping points__:<br>
+__Customising NCBI pipeline steps by specifying starting and stopping points__:<br>
 If provided, the `--retrieveaccessionsonly` flag will stop the pipeline after `accessions_filtered.tsv` is produced (see [Output files](#output-files) and [Background and methods](#background-and-methods)).<br>
 If provided, the `--retrievesequencesonly` flag will stop the pipeline after `accessions_filtered_deduplicated.fa` is produced.<br>
 If provided, the `--restartwithsequences` flag will re-start the pipeline from the point where `--retrievesequencesonly` stopped the pipeline. The output directory specified must be the same as the output directory that was previously specified when the pipeline was run with the `--retrievesequencesonly` flag.<br>
 The `--accessions` flag allows a user to bypass the NCBI query stage, and instead use a custom set of NCBI accessions. Accessions can be provided in "accession" or "accession.version" format; however, if the accession version has been updated on the NCBI server, then using an older accession.version as input will produce an error, so providing accessions without .version suffixes is more robust.<br>
-The `--inhousesequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and/or rMLST typing.<br>
 <br>
 _Example 1: you wish to update an existing database with more recent accessions:_<br>
 You could run bacterialBercow with the `--retrieveaccessionsonly` flag, and compare retrieved accessions with those in the existing database to identify novel putative plasmid accessions that you may wish to include. Then, you could run the next stage of bacterialBercow by providing the set of novel putative plasmids to the `--accessions` flag to determine plasmid accessions to be included in the existing database.<br>
 <br>
 _Example 2: you have access to a computer cluster which can be run with lots of `--threads` but for security reasons, the HTTPS protocol (required for accessing data from NCBI) is not permitted:_<br>
 You could run bacterialBercow in two stages. First, on your own computer, run bacterialBercow with the `--retrievesequencesonly` flag. Then, with the same output directory (`-o` flag) specified, run the typing stage of the pipeline on your computer cluster by providing the `--restartwithsequences` flag along with lots of `--threads`. Running in two stages as described also offers the opportunity to check that data has been successfully retrieved from NCBI before running with the `--restartwithsequences` flag. For example, accessions_filtered.tsv should contain the same number of nucleotide accessions as accessions_filtered.fa and accessions_filtered_dblinks.tsv (see [Output files](#output-files)).
+
+
+__Customising in-house contig pipeline steps__:<br>
+The `--inhousesequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and/or rMLST typing.<br>
+By default both replicon and rMLST typing will be conducted on in-house sequences, but a user can specify only `replicon` typing or only `rmlst` typing using the `--typing` flag. For accessions retrieved from NCBI, both replicon and rMLST typing are performed.<br>
+<br>
+Providing information about how contigs group according to source sample can improve contig classification. Specifically, a chromosome should be the longest contig in a sample. A tsv file containing contig names in the first column and associated sample names in the second column can be provided with the `--contigsamples` flag.<br>
+Known information about contig completeness or circularity (e.g. as provided by assemblers such as [Unicycler](https://github.com/rrwick/Unicycler)), can be included when classifying contigs. A tsv file containing contig names in the first column and contig completeness information in the second column can be provided with the `--contigcompleteness` flag. Contigs labelled as 'circular', 'complete', or 'complete_linear' will be considered to be complete sequences. Other accepted contig labels are 'linear','incomplete', and 'unknown'.<br>
+<br>
+By default, typing information is provided on a contig by contig basis. However, especially for framgented assemblies, sample-level typing information can be more useful. If provided, the `--sampleoutput` flag specifies that output should be provided at the sample-level (sampletyping.tsv) as well as the contig level (contigtyping.tsv).<br>
+The `--typedcontigsonly` flag, if provided, means that only typed contigs will be included in the contig-level output file.<br>
 
 
 
@@ -181,8 +187,7 @@ File/Directory            	    | Description
 ----------------------------------- | --------------------------------------------------------------------------------------------- 
 plasmidfinder/                	    | directory containing outputs from BLASTing sequences against plasmid replicon loci
 rmlst/                        	    | directory containing output from BLASTing sequences against chromosomal rMLST loci
-seqlengths.tsv			    | sequence names (from FASTA headers) and corresponding sequence lengths
-typing.tsv			    | information on sequences including replicon typing and rMLST typing
+contigtyping.tsv		    | replicon and/or rMLST typing, and contig classification 
 
 <br>
 
@@ -211,10 +216,11 @@ If in-house sequences are provided (`--inhousesequences`), replicon typing and r
 
 <br>
 <p align="center">Decision tree for sequences retrieved from NCBI</p>
-<p align="center"><img src="images/decisiontree_inhouse.png" alt="NCBI_decision_tree" width="600"></p>
+<p align="center"><img src="images/decisiontree_ncbi.png" alt="NCBI_decision_tree" width="600"></p>
+<br>
 <br>
 <p align="center">Decision tree for in-house sequences</p>
-<p align="center"><img src="images/decisiontree_ncbi.png" alt="inhouse_decision_tree" width="600"></p>
+<p align="center"><img src="images/decisiontree_inhouse.png" alt="inhouse_decision_tree" width="600"></p>
 <br>
 
 

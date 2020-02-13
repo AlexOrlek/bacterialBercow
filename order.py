@@ -32,6 +32,7 @@ help_group.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS
 #General options                             
 general_group = parser.add_argument_group('General options')
 general_group.add_argument('-o','--out', help='Output directory (required)', required=True, type=str)
+general_group.add_argument('-t','--threads', help='Number of threads to use (default: 1)', default=1, type=positiveint)
 
 #NCBI query and retrieval options
 ncbi_group = parser.add_argument_group('NCBI query and retrieval options')
@@ -42,26 +43,30 @@ ncbi_group.add_argument('-s','--dbsource', help='Database source; refseq or refs
 ncbi_group.add_argument('--deduplicationmethod', help='Specify how identical sequences should be deduplicated; either "all" duplicates are removed; otherwise, duplicates are removed if they share biosample accession id + "submitter" metadata; or "bioproject" accession id; or "both" submitter metadata and bioproject accession id (default: "both")', default="both", choices=["both","submitter","bioproject","all"],type=str)
 ncbi_group.add_argument('-b','--batchsize', help='Number of accession nucleotide records to retrieve per edirect query (default: 200; min: 2; max: 500)', default=200, type=batchsizeint)
 
-#Replicon and rMLST typing options
-typing_group = parser.add_argument_group('Replicon and rMLST typing options')
-typing_group.add_argument('-t','--threads', help='Number of threads to use (default: 1)', default=1, type=positiveint)
-typing_group.add_argument('--typing', help='Specifies what sequence typing to perform (only applicable if in-house sequences are provided using --inhousesequences flag); either "replicon", "rmlst" typing or "both" (default: both)',default="both",choices=["both","replicon","rmlst"],required=False)
+#NCBI pipeline step customisation (specifying starting and stopping points)
+steps_group = parser.add_argument_group('Customising NCBI pipeline steps (specifying starting / stopping points)')
+steps_group.add_argument('--accessions', help='A text file containing NCBI plasmid accessions in the first column; if provided, these accessions will be retrieved, rather than retrieving plasmid accessions using a query term (default: retrieve accessions using a query term)',required=False)
+steps_group.add_argument('--retrieveaccessionsonly', action='store_true',help='If flag is provided, stop after retrieving and filtering NCBI accessions (default: do not stop)',required=False)
+steps_group.add_argument('--retrievesequencesonly', action='store_true',help='If flag is provided, stop after retrieving deduplicated sequences from NCBI filtered accessions (default: do not stop)',required=False)
+steps_group.add_argument('--restartwithsequences', action='store_true',help='If flag is provided, re-start the pipeline using sequences retrieved from NCBI',required=False)
 
-#Contig information options
-contig_group = parser.add_argument_group('Options to specify files describing in-house contigs')
+
+#In-house contig options
+contig_group = parser.add_argument_group('Customising in-house contig pipeline steps')
+contig_group.add_argument('--inhousesequences', help='A fasta file containing uncharacterised bacterial contig nucleotide sequences; if provided, these contigs will be typed using rmlst and replicon loci to determine whether they are likely to be plasmids or chromosomal (default: retrieve sequences from NCBI)',required=False)
+contig_group.add_argument('--typing', help='Specifies what sequence typing to perform (only applicable if in-house sequences are provided using --inhousesequences flag); either "replicon", "rmlst" typing or "both" (default: both)',default="both",choices=["both","replicon","rmlst"],required=False)
 contig_group.add_argument('--contigsamples', help='A tsv file containing contig names in the first column and associated sample names in the second column',required=False)
 contig_group.add_argument('--contigcompleteness', help='A tsv file containing contig names in the first column and contig completeness information in the second column (accepted contig completeness descriptions: circular,complete,complete_linear,linear,incomplete,unknown)',required=False)
+contig_group.add_argument('--sampleoutput', action='store_true',help='If flag is provided, output a file with typing information at the sample-level (--contigsamples must be provided)',required=False)
+contig_group.add_argument('--typedcontigsonly', action='store_true',help='If flag is provided, only include contigs that have a detected rMLST/replicon type in the contig output file',required=False)
 
-#Pipeline step customisation (specifying starting and stopping points)
-steps_group = parser.add_argument_group('Customising pipeline steps (specifying starting / stopping points)')
-steps_group.add_argument('--accessions', help='A text file containing NCBI plasmid accessions in the first column; if provided, these accessions will be retrieved, rather than retrieving plasmid accessions using a query term (default: retrieve accessions using a query term)',required=False)
-steps_group.add_argument('--retrieveaccessionsonly', action='store_true',help='If flag is provided, stop after retrieving and filtering accessions (default: do not stop)',required=False)
-steps_group.add_argument('--retrievesequencesonly', action='store_true',help='If flag is provided, stop after retrieving deduplicated sequences from filtered accessions (default: do not stop)',required=False)
-steps_group.add_argument('--restartwithsequences', action='store_true',help='If flag is provided, re-start the pipeline using sequences retrieved from NCBI',required=False)
-steps_group.add_argument('--inhousesequences', help='A fasta file containing uncharacterised bacterial contig nucleotide sequences; if provided, these contigs will be typed using rmlst and replicon loci to determine whether they are likely to be plasmids or chromosomal (default: retrieve sequences from NCBI)',required=False)
 
 args = parser.parse_args()
 outputpath=os.path.relpath(args.out, cwdir)
+
+
+if args.sampleoutput==True and args.contigsamples==None:
+    sys.exit('Error: --sampleoutput is only possible if the --contigsamples flag is provided, to specify sample groupings')
 
 cmdArgs=['mkdir -p %s'%outputpath]
 runsubprocess(cmdArgs,shell=True)
@@ -129,13 +134,19 @@ else:
     if args.typing=='rmlst' or args.typing=='both':
         runsubprocess(['python', '%s/rmlst.py'%sourcedir,rmlstdbpath,str(args.threads),outputpath,'user',sourcedir,str(args.inhousesequences)])
         print('Finished BLAST searching rMLST database')
-    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,'user',str(args.typing),'enterobacteriaceae', 'gram_positive',str(args.contigcompleteness),str(args.contigsamples)])
+    runsubprocess(['python', '%s/finalfilter.py'%sourcedir, rmlstprofilepath,outputpath,'user',str(args.typing),'enterobacteriaceae', 'gram_positive',str(args.contigcompleteness),str(args.contigsamples),str(args.sampleoutput),str(args.typedcontigsonly)])
+    cmdArgs=["rm %s/seqlengths.tsv"%outputpath]
+    runsubprocess(cmdArgs,shell=True)
 
 print('Finished running bacterialBercow!')
 
 
 
 ###OLD CODE
+
+##Replicon and rMLST typing options
+#typing_group = parser.add_argument_group('Replicon and rMLST typing options')
+#typing_group.add_argument('--typing', help='Specifies what sequence typing to perform (only applicable if in-house sequences are provided using --inhousesequences flag); either "replicon", "rmlst" typing or "both" (default: both)',default="both",choices=["both","replicon","rmlst"],required=False)
 
 
 #typing_group.add_argument('--enterobacdbpath', help='Path to the "enterobacteriaceae" plasmidfinder BLAST database (default: databases/plasmidfinder/enterobacteriaceae/enterobacteriaceaedb)',required=False)

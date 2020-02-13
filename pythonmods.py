@@ -57,15 +57,16 @@ def runsubprocess(args,stderrpath=None, stdoutpath=None, writefile=None,shell=Fa
             if shell==True:
                 p=subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             stdout, stderr= p.communicate()
-            if verbose==True:
-                try:
-                    print('{} {}'.format(stdout.decode(), 'stdout'))
-                except:
-                    pass
-                try:
-                    print('{} {}'.format(stderr.decode(), 'stderr'))
-                except:
-                    pass
+            try:
+                if stdout and verbose==True: #if stdout not empty...
+                    print('{}'.format(stdout.decode()))
+            except:
+                pass
+            try:
+                if stderr:
+                    print('{}'.format(stderr.decode()))
+            except:
+                pass
             if stdoutpath==None:
                 pass
             else:
@@ -83,15 +84,16 @@ def runsubprocess(args,stderrpath=None, stdoutpath=None, writefile=None,shell=Fa
                 if shell==True:
                     p=subprocess.Popen(args,stdout=stdout, stderr=subprocess.PIPE, shell=True)
                 stdout, stderr= p.communicate()
-                if verbose==True:
-                    try:
-                        print('{} {}'.format(stdout.decode(), 'stdout'))
-                    except:
-                        pass
-                    try:
-                        print('{} {}'.format(stderr.decode(), 'stderr'))
-                    except:
-                        pass
+                try:
+                    if stdout and verbose==True:
+                        print('{}'.format(stdout.decode()))
+                except:
+                    pass
+                try:
+                    if stderr:
+                        print('{}'.format(stderr.decode()))
+                except:
+                    pass
                 #n.b stdout is None - can't write to file
                 if stderrpath==None:
                     pass
@@ -105,7 +107,7 @@ def runsubprocess(args,stderrpath=None, stdoutpath=None, writefile=None,shell=Fa
             sys.exit() #triggers except below
     except:
         if verbose==False:
-            print('{} {}'.format(processname, 'processname'))
+            print('{} {}'.format(processname, '#this pipeline step produced error'))
         print('unexpected error; exiting')
         sys.exit()
         

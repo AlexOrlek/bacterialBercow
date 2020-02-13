@@ -20,9 +20,9 @@ with open('%s/rmlstloci.txt'%rmlstdbpath) as f:
         locus=line.strip()
         database='%s/%s'%(rmlstdbpath,locus)
         blastoutput='%s/rmlst/BLASTtable_%s.tsv' %(outdir,locus)
-        runblastn(query, database, blastoutput, num_threads='%s'%threads, max_hsps='1', perc_identity='95', evalue='1e-10',word_size='28') #since running per-locus blasts, can be stringent with max_hsps***; also using stingent pid, e-value and word size
+        runblastn(query, database, blastoutput, num_threads='%s'%threads, perc_identity='95', evalue='1e-10',word_size='28')
         print('runblastn finshed for locus %s'%locus)
-#***"Maximum number of HSPs (alignments) to keep for any single query-subject pair. The HSPs shown will be the best as judged by expect value. This number should be an integer that is one or greater. If this option is not set, BLAST shows all HSPs meeting the expect value criteria. Setting it to one will show only the best HSP for every query-subject pair"
+
 
 #combining per-locus outputs prior to filtering
 args=['find %s/rmlst/ -maxdepth 1 -mindepth 1 -type f -name "BLASTtable_*.tsv" ! -name "BLASTtable_combined*.tsv" -exec cat {} \; > %s/rmlst/BLASTtable_combined.tsv'%(outdir,outdir)]
