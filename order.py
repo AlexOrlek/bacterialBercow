@@ -64,7 +64,19 @@ contig_group.add_argument('--typedcontigsonly', action='store_true',help='If fla
 args = parser.parse_args()
 outputpath=os.path.relpath(args.out, cwdir)
 
+#check databases downloaded
+rmlstdbexists=os.path.exists('%s/databases/rmlstalleles/blastdbs'%sourcedir)
+plasmidfinderdbexists=os.path.exists('%s/databases/plasmidfinder_db/blastdbs'%sourcedir)
+if rmlstdbexists==False or plasmidfinderdbexists==False:
+    if rmlstdbexists==False and plasmidfinderdbexists==False:
+        sys.exit('Error: the rMLST database and the PlasmidFinder database must be installed first (see README)')
+    elif rmlstdbexists==False:
+        sys.exit('Error: the rMLST database must be installed first (see README)')
+    else:
+        sys.exit('Error: the PlasmidFinder database must be installed first (see README)')
 
+
+#check --sampleoutput flag used correctly if provided 
 if args.sampleoutput==True and args.contigsamples==None:
     sys.exit('Error: --sampleoutput is only possible if the --contigsamples flag is provided, to specify sample groupings')
 
