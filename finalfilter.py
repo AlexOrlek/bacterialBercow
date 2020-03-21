@@ -4,7 +4,6 @@ from Bio import SeqIO
 from pythonmods import inctyping, rmlstprofile,rmlsttypingalleles
 from collections import defaultdict
 
-#sys.argv=['','/home/alex/Dropbox/Oxford_2015/testing/bacterialBercow/bacterialBercow/databases/rmlstalleles','klebsiellasampleoutput','user','both','enterobacteriaceae','gram_positive','klebsiellasample/contigcompleteness.tsv','klebsiellasample/contigsamples.tsv']
 rmlstprofilepath=sys.argv[1]
 outdir=sys.argv[2]
 sequenceorigin=sys.argv[3]
@@ -153,6 +152,7 @@ if sequenceorigin=='ncbi':
             if accession in rmlstaccessions: #non plasmid accession
                 #get rmlst type, and typing stats
                 rmlsttype=rmlsttypedict[accession]
+                topspecies,toprst,num_matches,num_mismatches,num_missingloci,num_multiallelicloci,rmlstalleles=rmlsttype
                 #get replicon type
                 reptype=reptypedict[accession]
                 ###classify accession
@@ -231,7 +231,8 @@ else:
                 else:
                     samplecontigdict[sample]=[contig]
         #iterate through samples
-        for sample in sorted(samplecontigdict.keys()):                
+        for sample in sorted(samplecontigdict.keys()):
+            f2.write('>%s\n'%sample)             
             samplecontigs=samplecontigdict[sample]
             lengths=[]
             for contig in samplecontigs:
