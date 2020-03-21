@@ -33,11 +33,11 @@ f2.close()
 
 #make blast databases
 cmdArgs=['bash', '%s/makeblastdbs.sh'%sourcedir, '%s'%output_folder, 'gram_positive']
-subprocess.call(cmdArgs)
+runsubprocess(cmdArgs)
 cmdArgs=['bash', '%s/makeblastdbs.sh'%sourcedir, '%s'%output_folder, 'enterobacteriaceae']
-subprocess.call(cmdArgs)
+runsubprocess(cmdArgs)
 
-
+#record download date
 current_year = datetime.datetime.utcnow().year
 current_month = datetime.datetime.utcnow().month
 current_day = datetime.datetime.utcnow().day

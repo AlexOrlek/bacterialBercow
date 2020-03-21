@@ -12,8 +12,8 @@ if sequenceorigin=='ncbi':
 else:
     query=sys.argv[6]
 
-cmdArgs='find %s'%rmlstdbpath+' '+'-maxdepth 1 -mindepth 1 -name "*.n??" -printf "%f\n" | rev | cut -d"." -f2- | rev | sort | uniq >'+' '+'%s/rmlstloci.txt'%rmlstdbpath
-runsubprocess([cmdArgs],shell=True)
+cmdArgs=['find %s'%rmlstdbpath+' '+'-maxdepth 1 -mindepth 1 -name "*.n??" -printf "%f\n" | rev | cut -d"." -f2- | rev | sort | uniq >'+' '+'%s/rmlstloci.txt'%rmlstdbpath]
+runsubprocess(cmdArgs,shell=True)
     
 with open('%s/rmlstloci.txt'%rmlstdbpath) as f:
     for line in f:

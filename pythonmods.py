@@ -13,101 +13,46 @@ def unlist(listed, d=','):
 
 
 ###wrapper for the subprocess command
-def runsubprocess(args,stderrpath=None, stdoutpath=None, writefile=None,shell=False,verbose=False):
+
+def runsubprocess(args,verbose=False,shell=False,polling=False):
     import subprocess,sys #os
     try:
         import thread
     except:
         import _thread
-    """takes a subprocess argument list and runs Popen/communicate(); if verbose=True, both output and error are printed to screen; stderrpath and stdoutpath for saving output can be optionally set; a redirect can be optionally set (writefile argument); errors are handled at multiple levels i.e. subthread error handling; can set shell=True; the function can be used 'fruitfully' since stdout is returned"""
-    if shell==True: #e.g. args=['ls *.txt]
-        processname=args[0] #ls *.txt
-        processname=processname.split()#['ls', '*.txt'] #list argument syntax 
+    """takes a subprocess argument list and runs Popen/communicate or Popen/poll() (if polling=True); if verbose=True, processname (string giving command call) is printed to screen (processname is always printed if a process results in error); errors are handled at multiple levels i.e. subthread error handling"""
+    if shell==True:
+        processname=args[0]
+        processname=processname[0].split()
+        processname=(" ".join(a for a in processname))
     else:
-        processname=args
-    processname=(" ".join(a for a in args))
-    if stderrpath==None:
-        pass
-    else:
-        if stderrpath.endswith('stderr.txt'): #want to make sure file ends with non-duplicated 'stderr.txt'
-            stderrpath=str(stderrpath[:-10]).strip()
-        stderrstrip=stderrpath.split('/')[-1]
-        if stderrstrip=='': #there was nothing to strip after / i.e. was just /stderr.txt or stderr.txt
-            pass
-        else:
-            stderrpath=stderrpath[:-(len(stderrstrip))]
-        stderrpath=stderrpath+processname+'_'+stderrstrip+'stderr.txt'
-    if stdoutpath==None:
-        pass
-    else:
-        if stdoutpath.endswith('stdout.txt'): 
-            stdoutpath=str(stdoutpath[:-10]).strip()
-        stdoutstrip=stdoutpath.split('/')[-1]
-        if stdoutstrip=='': 
-            pass
-        else:
-            stdoutpath=stdoutpath[:-(len(stdoutstrip))]
-        stdoutpath=stdoutpath+processname+'_'+stdoutstrip+'stdout.txt'
+        processname=(" ".join(a for a in args))
     if verbose==True:
         print('{} {}'.format(processname, 'processname'))
     try:
-        if writefile==None:
-            if shell==False:
-                p=subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if shell==True:
-                p=subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            stdout, stderr= p.communicate()
-            try:
-                if stdout and verbose==True: #if stdout not empty...
-                    print('{}'.format(stdout.decode()))
-            except:
-                pass
-            try:
-                if stderr:
-                    print('{}'.format(stderr.decode()))
-            except:
-                pass
-            if stdoutpath==None:
-                pass
-            else:
-                with open(stdoutpath,'w') as stdoutfile:
-                    stdoutfile.write(stdout)
-            if stderrpath==None:
-                pass
-            else:
-                with open(stderrpath,'w') as stderrfile:
-                    stderrfile.write(stderr)
+        if polling==True:
+            p=subprocess.Popen(args, stdout=subprocess.PIPE,shell=shell)
+            while True:
+                stdout=p.stdout.readline()
+                if p.poll() is not None:
+                    break
+                if stdout: #if stdout not empty...
+                    print('{}'.format(stdout.decode().strip()))
         else:
-            with open(writefile,'w') as stdout:
-                if shell==False:
-                    p=subprocess.Popen(args,stdout=stdout, stderr=subprocess.PIPE)
-                if shell==True:
-                    p=subprocess.Popen(args,stdout=stdout, stderr=subprocess.PIPE, shell=True)
-                stdout, stderr= p.communicate()
-                try:
-                    if stdout and verbose==True:
-                        print('{}'.format(stdout.decode()))
-                except:
-                    pass
-                try:
-                    if stderr:
-                        print('{}'.format(stderr.decode()))
-                except:
-                    pass
-                #n.b stdout is None - can't write to file
-                if stderrpath==None:
-                    pass
-                else:
-                    with open(stderrpath,'w') as stderrfile:
-                        stderrfile.write(stderr)
+            p=subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=shell)
+            stdout, stderr= p.communicate()
+            if stdout:
+                print('{}'.format(stdout.decode()))
+            if stderr:
+                print('{}'.format(stderr.decode()))
+
         if p.returncode==0:
             if verbose==True:
                 print('{} {}'.format(processname, 'code has run successfully'))
         else:
             sys.exit() #triggers except below
     except:
-        if verbose==False:
-            print('{} {}'.format(processname, '#this pipeline step produced error'))
+        print('{} {}'.format(processname, '#this pipeline step produced error'))
         print('unexpected error; exiting')
         sys.exit()
         
@@ -117,10 +62,6 @@ def runsubprocess(args,stderrpath=None, stdoutpath=None, writefile=None,shell=Fa
             thread.interrupt_main()
         except:
             _thread.interrupt_main()
-    else:
-        return stdout
-
-
 
 
 
@@ -156,7 +97,7 @@ def blastfilter(blastoutput,finalfile,sortedfile,sourcedir,idtable=False, pidthr
     uniquequerynames=[]
     querydict={}
     fileObj=open(sortedfile)
-    for indx, line in enumerate(fileObj):
+    for line in fileObj:
         data=line.strip().split('\t')
         queryname=data[0] #filtered qseqid                                               
         if queryname in querydict:
@@ -190,11 +131,11 @@ def blastfilter(blastoutput,finalfile,sortedfile,sourcedir,idtable=False, pidthr
         endindex=int(9) #ssend
     #write best hits to file
     fileObj=open(finalfile,'w')
-    for indxa, query in enumerate(uniquequerynames):
+    for query in uniquequerynames:
         #print('{} {}'.format(indxa, 'query indx, blastfilter'))
         hitrangegenelengths=[] #list of tuples of inlcuded hits and the associated gene lengths     
-        for indxb, data in enumerate(querydict[query]): #running through all hits associated with a given query
-            if indxb==0:  #for the highest scoring hit, include, irrespecitve of overlaps                                                                                             
+        for indx, data in enumerate(querydict[query]): #running through all hits associated with a given query
+            if indx==0:  #for the highest scoring hit, include, irrespecitve of overlaps                                                                                             
                 #print('{} {} {} {} {}'.format(data, 'data = row of hit info', startindex, endindex, data[0]))
                 ranges=[int(data[startindex]),int(data[endindex])]
                 genelength=int(data[genelenindex])
@@ -213,7 +154,7 @@ def blastfilter(blastoutput,finalfile,sortedfile,sourcedir,idtable=False, pidthr
                 maxrange=ranges[ranges.index(max(ranges))]
                 hitrange=range(minrange,maxrange+int(1))
                 #if hit range intersects dont include otherwise include and add hitrange to ranges.
-                for indxc, includedhit in enumerate(hitrangegenelengths):  #checking non-best hit against all inlcuded hits; there will be at least one hit (the best hit) in hit ranges
+                for includedhit in hitrangegenelengths:  #checking non-best hit against all inlcuded hits; there will be at least one hit (the best hit) in hit ranges
                     includedhitrange=includedhit[0]
                     includedgenelength=includedhit[1]
                     genelengths=[genelength, includedgenelength]
@@ -274,7 +215,7 @@ def mlstfilter(blastoutput,finalfile,sortedfile,sourcedir,idtable=False, pidthre
     accessions=[]
     fileObj=open(sortedfile)
     fileObj2=open(finalfile,'w')
-    for indx, line in enumerate(fileObj):
+    for line in fileObj:
         data=line.strip().split('\t')
         accession=data[0]
         if formatcontigcol==True: ###added to handle contig output
@@ -322,7 +263,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
     nestinctypes=[] #inc type
     nestinctypes_concise=[] #inc family
     if db=='enterobacteriaceae':
-        for idx, probe in enumerate(inctype_probes):
+        for probe in inctype_probes:
             probe=str(probe).strip()
             probesplit=probe.split('_')
             if probe.startswith('Col'):
@@ -436,22 +377,6 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append(probesplit[0])
                     print('{} {}'.format('IncX probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncX')
-            # elif probe.startswith('repA') or probe.startswith('Rep'): #these are recently added rep genes which don't fit with previous inc types                                                 
-            #     if probe.startswith('Rep_1_pKPC-2_CP011573'):
-            #         nestinctypes.append('rep_CP011573')
-            #         nestinctypes_concise.append('rep_CP011573')
-            #     elif probe.startswith('repA_1_pKPC-2_CP013325'):
-            #         nestinctypes.append('repA_CP013325')
-            #         nestinctypes_concise.append('repA_CP013325')
-            #     elif probe.startswith('repA_2_pKPC-2_JX397875'):
-            #         nestinctypes.append('repA_JX397875')
-            #         nestinctypes_concise.append('repA_JX397875')
-            #     elif probe.startswith('RepA_1_pKPC-CAV1321_CP011611'):
-            #         nestinctypes.append('repA_CP011611')
-            #         nestinctypes_concise.append('repA_CP011611')
-            #     else:
-            #         nestinctypes.append(probesplit[0])
-            #         print('{} {}'.format('Rep/repA probe could not be assigned a known replicon type', probe))
             elif probe.startswith('FIA') or probe.startswith('FIA('):
                 nestinctypes.append('IncFIA')
                 nestinctypes_concise.append('IncF')
@@ -466,7 +391,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     print('{} {}'.format('IncY probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncY')
             else:
-                print('{} {}'.format('unknown Inc probe could not be assigned a known replicon type/family', probe))
+                print('{} {}'.format('unknown Inc probe could not be assigned a known replicon type/family', probe)) #includes recently added rep genes which don't fit with previous inc types e.g. repA_CP011611
                 nestinctypes.append(probe)
                 nestinctypes_concise.append(probe)
                 
@@ -487,7 +412,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
     elif db=='gram_positive':
         import re
         gramposregex=re.compile(r'((?:^.*\|)?)(.*)') #allows probes of syntax Familyprefix|reptype_probeinfo OR reptype_probeinfo, by capturing both parts separately 
-        for idx, probe in enumerate(inctype_probes):
+        for probe in inctype_probes:
             probe=str(probe).strip()
             probegroup1=gramposregex.search(probe).group(1)
             probegroup2=gramposregex.search(probe).group(2)
@@ -539,7 +464,6 @@ def rmlstprofile(profilepath):
     profiles=[]
     genuses=[]
     species=[]
-    ccs=[]
     with open(profilepath) as f:  #profile.tsv file
         for indx, line in enumerate(f):
             data=line.strip().split('\t')
