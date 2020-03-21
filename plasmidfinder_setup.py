@@ -12,26 +12,29 @@ runsubprocess(cmdArgs,shell=True)
 cmdArgs=['git clone https://bitbucket.org/genomicepidemiology/plasmidfinder_db.git ./databases/plasmidfinder_db']
 runsubprocess(cmdArgs,shell=True)
 
+print('Retrieved plasmidfinder_db from bitbucket')
+
 gramposfastas=[]
-for file in os.listdir('./databases/plasmidfinder_db'):
-    if file.endswith('.fsa') and file!='enterobacteriaceae.fsa':
-        gramposfastas.append(os.path.join('./databases/plasmidfinder_db', file))
+for filename in os.listdir('./databases/plasmidfinder_db'):
+    if filename.endswith('.fsa') and filename!='enterobacteriaceae.fsa':
+        gramposfastas.append(filename)
 
 #combine gram-positive replicons into single gram-positive database
 f2=open('./databases/plasmidfinder_db/gram_positive.fsa','w')
 for filename in gramposfastas:
-    with open(filename) as f:
+    with open(os.path.join(output_folder,filename)) as f:
         for indx,seq_record in enumerate(SeqIO.parse(f,'fasta')):
             fastaheader=str(seq_record.id)
-            newfastaheader='%s|%s'%(filename,fastaheader)
+            newfastaheader='%s|%s'%(filename.rstrip('.fsa'),fastaheader)
             seq_record.id=newfastaheader
             seq_record.description=''
             SeqIO.write(seq_record,f2,'fasta')
+f2.close()
 
 #make blast databases
-cmdArgs=['bash', '%s/makeblastdbs.sh'%sourcedir, '%s'%output_folder, 'enterobacteriaceae']
-subprocess.call(cmdArgs)
 cmdArgs=['bash', '%s/makeblastdbs.sh'%sourcedir, '%s'%output_folder, 'gram_positive']
+subprocess.call(cmdArgs)
+cmdArgs=['bash', '%s/makeblastdbs.sh'%sourcedir, '%s'%output_folder, 'enterobacteriaceae']
 subprocess.call(cmdArgs)
 
 
@@ -41,4 +44,4 @@ current_day = datetime.datetime.utcnow().day
 with open(os.path.join(output_folder, 'download_date.txt'), 'w') as f:
     f.write('{}-{}-{}'.format(current_year, current_month, current_day))
             
-print('Finished downloading PlasmidFinder database')
+print('\nFinished making PlasmidFinder BLAST databases')
