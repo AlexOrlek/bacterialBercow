@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse, os, sys, subprocess, signal
+import argparse, os, sys, signal
 sourcedir=os.path.dirname(os.path.abspath(__file__))
 cwdir=os.getcwd()
 sys.path.append(sourcedir)

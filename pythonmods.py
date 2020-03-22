@@ -15,7 +15,7 @@ def unlist(listed, d=','):
 ###wrapper for the subprocess command
 
 def runsubprocess(args,verbose=False,shell=False,polling=False):
-    import subprocess,sys #os
+    import subprocess,sys
     try:
         import thread
     except:
@@ -44,7 +44,13 @@ def runsubprocess(args,verbose=False,shell=False,polling=False):
             if stdout:
                 print('{}'.format(stdout.decode()))
             if stderr:
-                print('{}'.format(stderr.decode()))
+                try: #want to output to stderr stream
+                    if (sys.version_info > (3, 0)):
+                        print('{}'.format(stderr.decode()),file=sys.stderr) #Python3
+                    else:
+                        print>>sys.stderr,stderr  #Python2
+                except: #if above code block fails for some reason, print stderr (to stdout)
+                    print('{}'.format(stderr.decode()))
 
         if p.returncode==0:
             if verbose==True:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, datetime, subprocess
+import os, datetime
 from Bio import SeqIO
 from pythonmods import runsubprocess
 
