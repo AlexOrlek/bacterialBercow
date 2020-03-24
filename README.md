@@ -143,9 +143,9 @@ You could run bacterialBercow in two stages. First, on your own computer, run ba
 
 __Customising in-house contig pipeline steps__:<br>
 The `--inhousesequences` flag allows a user to provide their own multi-FASTA file of sequences which will be characterised using replicon typing and/or rMLST typing.<br>
-By default both replicon and rMLST typing will be conducted on in-house sequences, but a user can specify only `replicon` typing or only `rmlst` typing using the `--typing` flag. If the goal is contig classification, it's best to run both rMLST and replicon typing, and if rMLST typing is not specified, contig classification is not attempted. For accessions retrieved from NCBI, both replicon and rMLST typing are performed.<br>
+By default `both` replicon and rMLST typing will be conducted on in-house sequences, but a user can specify only `replicon` typing or only `rmlst` typing using the `--typing` flag. If the goal is contig classification, it's best to run both rMLST and replicon typing, and if rMLST typing is not specified, contig classification is not attempted. For accessions retrieved from NCBI, both replicon and rMLST typing are performed.<br>
 <br>
-Providing information about how contigs group according to source sample can improve contig classification. Specifically, a chromosome should be the longest contig in a sample. A tsv file containing contig names in the first column and associated sample names in the second column can be provided with the `--contigsamples` flag.<br>
+Providing information about how contigs group according to source sample can improve contig classification. For example, a chromosome should be the longest contig in a sample. A tsv file containing contig names in the first column and associated sample names in the second column can be provided with the `--contigsamples` flag.<br>
 Known information about contig completeness or circularity (e.g. as provided by assemblers such as [Unicycler](https://github.com/rrwick/Unicycler)), can be included when classifying contigs. A tsv file containing contig names in the first column and contig completeness information in the second column can be provided with the `--contigcompleteness` flag. Contigs labelled as 'circular', 'complete', or 'complete_linear' will be considered to be complete sequences. Other accepted contig labels are 'linear','incomplete', and 'unknown'.<br>
 <br>
 By default, typing information is provided on a contig by contig basis. However, especially for fragmented assemblies, sample-level typing information can be more useful. If a file is provided to the `--contigsamples` flag, specifying contig sample groupings, then output will be provided at the sample-level (sampletyping.tsv) as well as at the contig level (contigtyping.tsv).<br>
@@ -208,20 +208,20 @@ For background information on curating NCBI plasmids see recent papers: [Orlek _
     The aim of the `bioproject`, `submitter`, and `both` methods is to allow for interesting duplicates to be retained - identical plasmids from distinct samples and sequencing projects, that may represent transmission of a conserved plasmid between different epidemiological settings. Nucleotide accessions originating from the same biological sample should share the same BioSample accession; nucleotide accessions originating from the same sequencing project should share the same primary BioProject id ([Pruitt 2011](https://www.ncbi.nlm.nih.gov/books/NBK54015/), [Barrett 2012](https://www.ncbi.nlm.nih.gov/pubmed/22139929), [Benson 2013](https://academic.oup.com/nar/article/41/D1/D36/1068219)). However, in Refseq, higher-level primary BioProject accessions [can be created by NCBI staff](https://www.ncbi.nlm.nih.gov/bioproject/docs/faq/#what-is-project-type), e.g. [PRJNA224116](https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA224116). This breaks the correspondence between Refseq BioProject accession and sequencing project; therefore, for Refseq accessions the original BioProject accession id is retrieved via the cognate Genbank accession.    
 4. The remaining sequences are BLASTed against the PlasmidFinder replicon database and the rMLST database.
 5. If a sequence contains no rMLST loci then it is considered a plasmid and included in the plasmids.fa output file (although see "caveats" in the [FAQ](#faq) section for potential limitations of this approach). Note that to be considered a plasmid, a replicon locus need not be detected, and indeed it is not that uncommon to encounter plasmids with no known replicon locus. Therefore, replicon typing is not essential to the plasmid curation methodology as it stands, but is included since it is widely used by the plasmid community to describe plasmids and gain insight into plasmid epidemiology.
-6. Accessions with rMLST loci detected are recorded in nonplasmids.tsv. Contigs are classified as chromosome or chromosomal (=incomplete chromosome sequence or chromid sequence) based on the decision tree below. Plasmid replicon types, if present, are assigned (chromids and chromosomes can contain plasmid replicons). rMLST-based species predictions are assigned to sequences (although it may not be possible to assign species unambiguously if insufficient loci are detected for a given sequence).
+6. Accessions with rMLST loci detected are recorded in nonplasmids.tsv. Contigs are classified as chromosome or chromosomal (=incomplete chromosome sequence or chromid sequence) (see Decision tree 1, below). Plasmid replicon types, if present, are assigned (chromids and chromosomes can contain plasmid replicons). rMLST-based species predictions are assigned to sequences (although it may not be possible to assign species unambiguously if insufficient loci are detected for a given sequence).
 
 <br>
 
-If in-house sequences are provided (`--inhousesequences`), replicon typing and rMLST are conducted (step 4), but a different possible decision tree is implemented for classifying contigs (see below), and typing information/contig classification is output in one file (contigtyping.tsv). With NCBI-retrieved sequences, completeness information may be unreliable so is not used to inform contig classification decisions. Neither is contig source sample affiliation. In contrast, with in-house assemblies, users can provide trusted information about contig completeness and source sample affiliation using the `--contigcompleteness` and `--contigsamples` flags. This information is used to inform contig classification.
+If in-house sequences are provided (`--inhousesequences`), replicon typing and rMLST are conducted (step 4), but a different possible decision tree is implemented for classifying contigs (see Decision tree 2, below), and typing information/contig classification is output in one file (contigtyping.tsv). With NCBI-retrieved sequences, completeness information may be unreliable so is not used to inform contig classification decisions. Neither is contig source sample affiliation. In contrast, with in-house assemblies, users can provide trusted information about contig completeness and source sample affiliation using the `--contigcompleteness` and `--contigsamples` flags. This information is used to inform contig classification.
 
 
 <br>
-<p align="center">Decision tree for sequences retrieved from NCBI</p>
-<p align="center"><img src="images/decisiontree_ncbi.png" alt="NCBI_decision_tree" width="600"></p>
+<p align="center">Decision tree 1: Classifying sequences retrieved from NCBI</p>
+<p align="center"><img src="images/decisiontree_ncbi.png" alt="NCBI_decision_tree" width="800"></p>
 <br>
 <br>
-<p align="center">Decision tree for in-house sequences</p>
-<p align="center"><img src="images/decisiontree_inhouse.png" alt="inhouse_decision_tree" width="600"></p>
+<p align="center">Decision tree 2: Classifying in-house sequences</p>
+<p align="center"><img src="images/decisiontree_inhouse.png" alt="inhouse_decision_tree" width="800"></p>
 <br>
 
 
@@ -229,7 +229,8 @@ If in-house sequences are provided (`--inhousesequences`), replicon typing and r
 # FAQ
 
 * **Why is the tool called bacterialBercow?**
-[John Bercow](https://en.wikipedia.org/wiki/John_Bercow) is a former [Speaker of the House of Commons](https://en.wikipedia.org/wiki/Speaker_of_the_House_of_Commons_(United_Kingdom)); he was responsible for bringing order to UK parliamentary debates during [unruly times](https://www.youtube.com/watch?v=EY7EIZl4raY), and did so by yelling "Order! Ordeerr!". As I explained in my "Ordering the mob" paper, these are unruly times for microbiologists too - faced with a deluge of bacterial genome sequences, available via NCBI and from in-house sequencing projects.
+[John Bercow](https://en.wikipedia.org/wiki/John_Bercow) is a former [Speaker of the House of Commons](https://en.wikipedia.org/wiki/Speaker_of_the_House_of_Commons_(United_Kingdom)). He was responsible for bringing order to a divided UK parliament during [unruly times](https://www.youtube.com/watch?v=EY7EIZl4raY), and did so by yelling "Order! Ordeerr!". Likewise, bacterialBercow brings order to the different divisions of the bacterial genomes (chromosome, plasmid, chromid); these are unruly times for microbiologists too – faced with a deluge of bacterial genome sequences, available via NCBI and from in-house sequencing projects.
+
 
 * **How do the methods of bacterialBercow differ from previously published methods for retrieving and curating NCBI plasmids?**
 I previously published a similar method for plasmid curation ([Orlek _et al._ 2017](https://www.ncbi.nlm.nih.gov/pubmed/28286183)), but compared with bacterialBercow, the methods in the paper differ in several key ways:
