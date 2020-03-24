@@ -57,7 +57,7 @@ contig_group.add_argument('--inhousesequences', help='A fasta file containing un
 contig_group.add_argument('--typing', help='Specifies what sequence typing to perform (only applicable if in-house sequences are provided using --inhousesequences flag); either "replicon", "rmlst" typing or "both" (default: both)',default="both",choices=["both","replicon","rmlst"],required=False)
 contig_group.add_argument('--contigsamples', help='A tsv file containing contig names in the first column and associated sample names in the second column',required=False)
 contig_group.add_argument('--contigcompleteness', help='A tsv file containing contig names in the first column and contig completeness information in the second column (accepted contig completeness descriptions: circular,complete,complete_linear,linear,incomplete,unknown)',required=False)
-contig_group.add_argument('--sampleoutput', action='store_true',help='If flag is provided, output a file with typing information at the sample-level (--contigsamples must be provided)',required=False)
+#contig_group.add_argument('--sampleoutput', action='store_true',help='If flag is provided, output a file with typing information at the sample-level (--contigsamples must be provided)',required=False)
 contig_group.add_argument('--typedcontigsonly', action='store_true',help='If flag is provided, only include contigs that have a detected rMLST/replicon type in the contig output file',required=False)
 
 
@@ -77,8 +77,11 @@ if rmlstdbexists==False or plasmidfinderdbexists==False:
 
 
 #check --sampleoutput flag used correctly if provided 
-if args.sampleoutput==True and args.contigsamples==None:
-    sys.exit('Error: --sampleoutput is only possible if the --contigsamples flag is provided, to specify sample groupings')
+#if args.sampleoutput==True and args.contigsamples==None:
+#    sys.exit('Error: --sampleoutput is only possible if the --contigsamples flag is provided, to specify sample groupings')
+if args.contigsamples!=None:
+    args.sampleoutput=True  #always produce sample-level output if args.contigsamples is provided
+
 
 cmdArgs=['mkdir -p %s'%outputpath]
 runsubprocess(cmdArgs,shell=True)

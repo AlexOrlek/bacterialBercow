@@ -108,9 +108,9 @@ To characterise and classify your own bacterial sequences using plasmid replicon
 `order.py --inhousesequences samples.fasta -o output-directory --contigcompleteness contigcompletenessfile.tsv --contigsamples contigsamplesfile.tsv`
 
 
-If you have a fragmented assembly (assembled from short-reads), then unambiguously classifying all contigs will not be possible. You can instead restrict contig output to include only contigs with a replicon or rMLST locus detected (`--typedcontigsonly`) and you can request output at the sample-level (`--sampleoutput`). In the case of fragmented assemblies, analysing at the sample-level is more informative in terms of rMLST speciation and picking up multi-allelic rMLST loci, so it's especially important to delimit sample groupings by providing the `--contigsamples` flag so that analysis can be conducted at the sample-level:
+If you have a fragmented assembly (assembled from short-reads), then unambiguously classifying all contigs will not be possible. You can instead restrict contig output to include only contigs with a replicon or rMLST locus detected (`--typedcontigsonly`). In the case of fragmented assemblies, analysing at the sample-level is more informative in terms of rMLST speciation and picking up multi-allelic rMLST loci, so it's especially important to delimit sample groupings by providing the `--contigsamples` flag so that analysis can be conducted at the sample-level (sample-level information will be output to a file called sampletyping.tsv):
 
-`order.py --inhousesequences samples.fasta -o output-directory --contigsamples contigsamplesfile.tsv --typedontigsonly --sampleoutput`
+`order.py --inhousesequences samples.fasta -o output-directory --contigsamples contigsamplesfile.tsv --typedontigsonly`
 
 
 # Options and usage
@@ -148,7 +148,7 @@ By default both replicon and rMLST typing will be conducted on in-house sequence
 Providing information about how contigs group according to source sample can improve contig classification. Specifically, a chromosome should be the longest contig in a sample. A tsv file containing contig names in the first column and associated sample names in the second column can be provided with the `--contigsamples` flag.<br>
 Known information about contig completeness or circularity (e.g. as provided by assemblers such as [Unicycler](https://github.com/rrwick/Unicycler)), can be included when classifying contigs. A tsv file containing contig names in the first column and contig completeness information in the second column can be provided with the `--contigcompleteness` flag. Contigs labelled as 'circular', 'complete', or 'complete_linear' will be considered to be complete sequences. Other accepted contig labels are 'linear','incomplete', and 'unknown'.<br>
 <br>
-By default, typing information is provided on a contig by contig basis. However, especially for fragmented assemblies, sample-level typing information can be more useful. If provided, the `--sampleoutput` flag specifies that output should be provided at the sample-level (sampletyping.tsv) as well as the contig level (contigtyping.tsv).<br>
+By default, typing information is provided on a contig by contig basis. However, especially for fragmented assemblies, sample-level typing information can be more useful. If a file is provided to the `--contigsamples` flag, specifying contig sample groupings, then output will be provided at the sample-level (sampletyping.tsv) as well as at the contig level (contigtyping.tsv).<br>
 The `--typedcontigsonly` flag, if provided, means that only typed contigs will be included in the contig-level output file.<br>
 
 
@@ -157,10 +157,10 @@ The `--typedcontigsonly` flag, if provided, means that only typed contigs will b
 
 The below table shows the outputs from running the complete pipeline (including retrieval of accessions from NCBI) with default settings.
 
-File/Directory            	        | Description
+File/Directory            	            | Description
 --------------------------------------- | --------------------------------------------------------------------------------------------- 
-downloaddate.txt		        | a record of when the accessions were retrieved
-accessions.tsv			        | putative plasmid accessions retrieved from NCBI
+downloaddate.txt		                | a record of when the accessions were retrieved
+accessions.tsv			                | putative plasmid accessions retrieved from NCBI
 incompleteaccessions.tsv       	        | as above but not annotated as complete; these accessions are excluded
 accessions_filtered.tsv        	        | accessions remaining, after filtering based on accession title text
 excludedaccessions.tsv	     	        | accessions excluded, after filtering based on accession title text  
@@ -168,26 +168,27 @@ accessions_filtered_dblinks.tsv         | BioSample and BioProject accession ids
 accessions_filtered_metadata.tsv        | BioSample accessions and metadata (submitter name and owner name)
 accessions_filtered_refseq_gb.tsv       | Refseq accessions and their cognate Genbank accessions
 accessions_filtered_morebioprojects.tsv | see below for explanation **\*** 
-identicalaccessions.tsv		        | information on accessions with identical sequences, including corresponding submitter metadata and BioProject accession ids 
+identicalaccessions.tsv		            | information on accessions with identical sequences, including corresponding submitter metadata and BioProject accession ids 
 accessions_filtered.fa                  | sequences of accessions_filtered.tsv
 accessions_filtered_deduplicated.tsv	| accessions remaining after removal of duplicate sequences
 accessions_filtered_deduplicated.fa     | sequences of accessions_filtered_deduplicated.tsv
 plasmidfinder/                	        | directory containing outputs from BLASTing remaining sequences against plasmid replicon loci
 rmlst/                        	        | directory containing output from BLASTing remaining sequences against chromosomal rMLST loci
-plasmids.fa		     	        | plasmid sequences  
-plasmids.tsv		     	        | information on plasmid sequences including replicon typing
-nonplasmids.tsv			        | information on non-plasmid sequences including replicon typing and rMLST typing
+plasmids.fa		     	                | plasmid sequences  
+plasmids.tsv		     	            | information on plasmid sequences including replicon typing
+nonplasmids.tsv			                | information on non-plasmid sequences including replicon typing and rMLST typing
 
 **\*** Contains additional BioProject accession ids of missing cognate Genbank accessions (present in accessions_filtered_refseq_gb.tsv, but missing in accessions_filtered.tsv). Cognate Genbank accessions may be missing for the following reasons: 1) Only Refseq accessions were retrieved i.e. the `refseq` argument was provided to the `-s` flag; 2) Both Refseq and Genbank accessions were retrieved, but the Genbank accession was not included in accessions_filtered.tsv, most likely because annotation details differed between Refseq and Genbank accessions e.g. the Refseq accession was annotated as complete but the Genbank accession was not; therefore the Genbank accession was excluded as incomplete.<br>
 <br>
 
-The below table shows outputs from running the pipeline with the `--inhousesequences` flag provided.
+The below table shows outputs from running the pipeline with the `--inhousesequences` flag and `--contigsamples` flag provided.
 
-File/Directory            	    | Description
+File/Directory               	    | Description
 ----------------------------------- | --------------------------------------------------------------------------------------------- 
 plasmidfinder/                	    | directory containing outputs from BLASTing sequences against plasmid replicon loci
 rmlst/                        	    | directory containing output from BLASTing sequences against chromosomal rMLST loci
-contigtyping.tsv		    | replicon and/or rMLST typing, and contig classification 
+contigtyping.tsv		            | replicon and/or rMLST typing, and contig classification 
+sampletyping.tsv                    | replicon and/or rMLST typing at the sample-level
 
 <br>
 
