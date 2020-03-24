@@ -6,5 +6,5 @@ TESTING
 databases/rmlstalleles
 databases/plasmidfinder
 keysecret.txt
-__pychache__
+__pychache__/
 COPY
