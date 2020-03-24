@@ -230,9 +230,9 @@ else:
                     samplecontigdict[sample].append(contig)
                 else:
                     samplecontigdict[sample]=[contig]
-        #iterate through samples
-        for sample in sorted(samplecontigdict.keys()):
-            f2.write('>%s\n'%sample)             
+        #iterate through samples (first pass - annotate chromosome, chromosomal, chromid contigs; leave other contigs as unknown for now)
+        contigclassesdict={}
+        for sample in sorted(samplecontigdict.keys()):           
             samplecontigs=samplecontigdict[sample]
             lengths=[]
             for contig in samplecontigs:
@@ -241,8 +241,50 @@ else:
             indices.reverse()
             samplecontigs=[samplecontigs[i] for i in indices] #sample contigs are now sorted in length order, starting with longest
             lengths=[lengths[i] for i in indices]
+            #iterate through sample contigs, sorted by length
+            for indxb,(contig,length) in enumerate(zip(samplecontigs,lengths)):
+                #get typing info and contig completeness
+                reptype=reptypedict[contig]
+                enterobactypes,enterobacprobes,enterobacnum,grampostypes,gramposprobes,gramposnum=reptype
+                rmlsttype=rmlsttypedict[contig]
+                topspecies,toprst,num_matches,num_mismatches,num_missingloci,num_multiallelicloci,rmlstalleles=rmlsttype
+                contigcompleteness=contigcompletenessdict[contig]
+                ##classify contig
+                #check for chromosome contig: longest contig, rmlst typed with max 3 missing loci, longer than 500kb
+                contigclass='unknown'
+                if indxb==0 and topspecies!='-' and int(length)>500000:
+                    if int(num_missingloci)<=3:
+                        if contigcompleteness=='complete':
+                            contigclass='complete chromosome'
+                        else:
+                            contigclass='chromosome'
+                #classify non-chromosome sample contigs
+                if contigclass=='unknown':
+                    if topspecies!='-':  #at least one rMLST locus
+                        if contigcompleteness=='complete':
+                            contigclass='complete chromid'
+                        else:
+                            contigclass='chromosomal'
+                    #else:  #no rMLST (so no topspecies); leave contig classified as unknown; after iterating through all contigs again, reassign according to decision tree
+                #store contig class
+                contigclassesdict[contig]=contigclass
+
+        #iterate through samples (second pass - assign contigs without rMLST locus)
+        for sample in sorted(samplecontigdict.keys()):
+            f2.write('>%s\n'%sample)  
+            samplecontigs=samplecontigdict[sample]
+            contigclasses=set()
+            for contig in samplecontigs:
+                contigclasses.add(contigclassesdict[contig])
+            lengths=[]
+            for contig in samplecontigs:
+                lengths.append(seqlengthdict[contig])
+            indices=list(np.argsort(lengths))
+            indices.reverse()
+            samplecontigs=[samplecontigs[i] for i in indices] #sample contigs are now sorted in length order, starting with longest
+            lengths=[lengths[i] for i in indices]
             #initialise sample-level lists
-            if sampleoutput=='True':
+            if sampleoutput=='True':  #sampleoutput=True by default in lastest version, so this if statement is now uneccessary
                 samplermlstalleles=[]
                 sampleenterobactypes=[]
                 sampleenterobacprobes=[]
@@ -250,8 +292,9 @@ else:
                 samplegramposprobes=[]
                 samplelength=str(sum(lengths))
             #iterate through sample contigs, sorted by length
-            for indxb,(contig,length) in enumerate(zip(samplecontigs,lengths)):
+            for contig,length in zip(samplecontigs,lengths):
                 #get typing info and contig completeness
+                contigclass=contigclassesdict[contig]
                 reptype=reptypedict[contig]
                 enterobactypes,enterobacprobes,enterobacnum,grampostypes,gramposprobes,gramposnum=reptype
                 rmlsttype=rmlsttypedict[contig]
@@ -268,36 +311,22 @@ else:
                         samplegrampostypes.extend(grampostypes.split(','))
                         samplegramposprobes.extend(gramposprobes.split(','))
                 ##classify contig
-                #check for chromosome contig: longest contig, rmlst typed with max 3 missing loci, longer than 500kb
-                chromosomeclass=True
-                if indxb==0 and topspecies!='-' and int(length)>500000:
-                    if int(num_missingloci)<=3:
+                if contigclass=='unknown':
+                    if enterobactypes!='-' or grampostypes!='-':
+                        contigclass='putative plasmid'
                         if contigcompleteness=='complete':
-                            contigclass='complete chromosome'
+                            contigclass='complete plasmid'
                         else:
-                            contigclass='chromosome'
+                            if ('chromosomal' not in contigclasses) and ('chromosome' not in contigclasses): #if other rMLST contigs are either complete chromosome or chromid
+                                contigclass='plasmid'
                     else:
-                        chromosomeclass=False
-                else:
-                    chromosomeclass=False
-                #classify non-chromosome sample contigs
-                if chromosomeclass==False:
-                    if topspecies!='-':
-                        if contigcompleteness=='complete':
-                            contigclass='chromid'
-                        else:
-                            contigclass='chromosomal'
-                    else:
-                        if contigcompleteness=='complete':
-                            contigclass='plasmid'
-                        else:
+                        if ('chromosomal' not in contigclasses) and ('chromosome' not in contigclasses):
                             contigclass='putative plasmid'
-                            
+                                
                 ##write contig-level typing to file##
                 if typedcontigsonly=='True':  #skip untyped contigs
-                    if topspecies=='-' and reptype[0]=='-' and reptype[3]=='-':
+                    if topspecies=='-' and enterobactypes=='-' and grampostypes=='-':
                         continue
-                
                 if typing=='both':
                     f2.write('%s\t%s\t%s\t%s\t%s\n'%(contig,length,'\t'.join(rmlsttype),'\t'.join(reptype),contigclass))
                 elif typing=='rmlst':
@@ -348,37 +377,34 @@ else:
         for contig in sorted(contigs):
             length=seqlengthdict[contig]
             reptype=reptypedict[contig]
+            enterobactypes,enterobacprobes,enterobacnum,grampostypes,gramposprobes,gramposnum=reptype
             rmlsttype=rmlsttypedict[contig]
             topspecies,toprst,num_matches,num_mismatches,num_missingloci,num_multiallelicloci,rmlstalleles=rmlsttype
             contigcompleteness=contigcompletenessdict[contig]
             #check for chromosome contig: rmlst typed with max 3 missing loci, longer than 500kb                                        
-            chromosomeclass=True
+            contigclass='unknown'
             if int(length)>500000 and topspecies!='-':
                 if int(num_missingloci)<=3:
                     if contigcompleteness=='complete':
                         contigclass='complete chromosome'
                     else:
                         contigclass='chromosome'
-                else:
-                    chromosomeclass=False
-            else:
-                chromosomeclass=False
             #classify non-chromosome contigs                                                                                            
-            if chromosomeclass==False:
+            if contigclass=='unknown':
                 if topspecies!='-':
                     if contigcompleteness=='complete':
-                        contigclass='chromid'
+                        contigclass='complete chromid'
                     else:
                         contigclass='chromosomal'
                 else:
-                    if contigcompleteness=='complete':
-                        contigclass='plasmid'
-                    else:
+                    if enterobactypes!='-' or grampostypes!='-':
                         contigclass='putative plasmid'
+                        if contigcompleteness=='complete':
+                            contigclass='complete plasmid'
 
             ##write contig-level typing to file##
             if typedcontigsonly=='True':  #skip untyped contigs
-                if topspecies=='-' and reptype[0]=='-' and reptype[3]=='-':
+                if topspecies=='-' and enterobactypes=='-' and grampostypes=='-':
                     continue
                 
             if typing=='both':
