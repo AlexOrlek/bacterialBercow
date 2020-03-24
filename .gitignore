@@ -5,6 +5,7 @@ OLD
 TESTING
 databases/rmlstalleles
 databases/plasmidfinder
+databases/plasmidfinder_db
 keysecret.txt
-__pychache__/
+__pychache__
 COPY
