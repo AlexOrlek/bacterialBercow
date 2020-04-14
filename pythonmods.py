@@ -28,7 +28,7 @@ def runsubprocess(args,verbose=False,shell=False,polling=False):
     else:
         processname=(" ".join(a for a in args))
     if verbose==True:
-        print('{} {}'.format(processname, 'processname'))
+        print('{0} {1}'.format(processname, 'processname'))
     try:
         if polling==True:
             p=subprocess.Popen(args, stdout=subprocess.PIPE,shell=shell)
@@ -37,28 +37,28 @@ def runsubprocess(args,verbose=False,shell=False,polling=False):
                 if p.poll() is not None:
                     break
                 if stdout: #if stdout not empty...
-                    print('{}'.format(stdout.decode().strip()))
+                    print('{0}'.format(stdout.decode().strip()))
         else:
             p=subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=shell)
             stdout, stderr= p.communicate()
             if stdout:
-                print('{}'.format(stdout.decode()))
+                print('{0}'.format(stdout.decode()))
             if stderr:
                 try: #want to output to stderr stream
                     if (sys.version_info > (3, 0)):
-                        print('{}'.format(stderr.decode()),file=sys.stderr) #Python3
+                        print('{0}'.format(stderr.decode()),file=sys.stderr) #Python3
                     else:
                         print>>sys.stderr,stderr  #Python2
                 except: #if above code block fails for some reason, print stderr (to stdout)
-                    print('{}'.format(stderr.decode()))
+                    print('{0}'.format(stderr.decode()))
 
         if p.returncode==0:
             if verbose==True:
-                print('{} {}'.format(processname, 'code has run successfully'))
+                print('{0} {1}'.format(processname, 'code has run successfully'))
         else:
             sys.exit() #triggers except below
     except:
-        print('{} {}'.format(processname, '#this pipeline step produced error'))
+        print('{0} {1}'.format(processname, '#this pipeline step produced error'))
         print('unexpected error; exiting')
         sys.exit()
         
@@ -138,11 +138,11 @@ def blastfilter(blastoutput,finalfile,sortedfile,sourcedir,idtable=False, pidthr
     #write best hits to file
     fileObj=open(finalfile,'w')
     for query in uniquequerynames:
-        #print('{} {}'.format(indxa, 'query indx, blastfilter'))
+        #print('{0} {1}'.format(indxa, 'query indx, blastfilter'))
         hitrangegenelengths=[] #list of tuples of inlcuded hits and the associated gene lengths     
         for indx, data in enumerate(querydict[query]): #running through all hits associated with a given query
             if indx==0:  #for the highest scoring hit, include, irrespecitve of overlaps                                                                                             
-                #print('{} {} {} {} {}'.format(data, 'data = row of hit info', startindex, endindex, data[0]))
+                #print('{0} {1} {2} {3} {4}'.format(data, 'data = row of hit info', startindex, endindex, data[0]))
                 ranges=[int(data[startindex]),int(data[endindex])]
                 genelength=int(data[genelenindex])
                 minrange=ranges[ranges.index(min(ranges))]
@@ -282,14 +282,14 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append('IncA/C2')
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncA/C probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncA/C probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncA/C')
             elif probe.startswith('IncB/O/K/Z'):
                 if re.match('IncB/O/K/Z_[0-9]+_',probe):               
                     nestinctypes.append(str(probesplit[0])+str(probesplit[1]))
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncIncB/O/K/Z probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncIncB/O/K/Z probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncB/O/K/Z')
             elif probe.startswith('IncF'):
                 if probe.startswith('IncFII') or probe.startswith('IncFII('):
@@ -302,7 +302,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append('IncFIC')
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncF probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncF probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncF')
             elif probe.startswith('IncHI'):
                 if probe.startswith('IncHI1'):
@@ -311,7 +311,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append('IncHI2')
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncHI probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncHI probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncH')
             elif probe.startswith('IncI'):
                 if probe.startswith('IncI1'):
@@ -324,7 +324,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append('IncI1-alpha')
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncI probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncI probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncI')
             elif probe.startswith('IncL/M'):
                 nestinctypes.append('IncL/M') #the IncL/M family isn't subdivided into replicon types in plasmidfinder 
@@ -338,7 +338,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append('IncN3')
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncN probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncN probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncN')
             elif probe.startswith('IncP') or probe.startswith('P1_alpha'):
                 if probe.startswith('P1_alpha'):
@@ -351,7 +351,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append('IncP1')
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncP probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncP probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncP')
             elif probe.startswith('IncQ'):
                 if probe.startswith('IncQ1'):
@@ -360,7 +360,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append('IncQ2')
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncQ probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncQ probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncQ')
             elif probe.startswith('IncR'):
                 nestinctypes.append(probesplit[0]) #not subdivided into different replicon types in plasmidfinder
@@ -381,7 +381,7 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append(probesplit[0])
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncX probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncX probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncX')
             elif probe.startswith('FIA') or probe.startswith('FIA('):
                 nestinctypes.append('IncFIA')
@@ -394,10 +394,10 @@ def inctypingprobes(inctype_probes,db='enterobacteriaceae'):
                     nestinctypes.append('IncY') #currently only 1 IncY type IncY_1
                 else:
                     nestinctypes.append(probesplit[0])
-                    print('{} {}'.format('IncY probe could not be assigned a known replicon type', probe))
+                    print('{0} {1}'.format('IncY probe could not be assigned a known replicon type', probe))
                 nestinctypes_concise.append('IncY')
             else:
-                print('{} {}'.format('unknown Inc probe could not be assigned a known replicon type/family', probe)) #includes recently added rep genes which don't fit with previous inc types e.g. repA_CP011611
+                print('{0} {1}'.format('unknown Inc probe could not be assigned a known replicon type/family', probe)) #includes recently added rep genes which don't fit with previous inc types e.g. repA_CP011611
                 nestinctypes.append(probe)
                 nestinctypes_concise.append(probe)
                 

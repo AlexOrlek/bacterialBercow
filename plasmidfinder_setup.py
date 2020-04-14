@@ -42,6 +42,6 @@ current_year = datetime.datetime.utcnow().year
 current_month = datetime.datetime.utcnow().month
 current_day = datetime.datetime.utcnow().day
 with open(os.path.join(output_folder, 'download_date.txt'), 'w') as f:
-    f.write('{}-{}-{}'.format(current_year, current_month, current_day))
+    f.write('{0}-{1}-{2}'.format(current_year, current_month, current_day))
             
 print('\nFinished making PlasmidFinder BLAST databases')

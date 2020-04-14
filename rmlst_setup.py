@@ -64,8 +64,8 @@ class RmlstRest(object):
                 decoded = r.text
             # Extract all the URLs in the decoded dictionary under the key 'loci'
             for locus_url in decoded['loci']:
-                output_file = os.path.join(self.output_folder, '{}.tfa'.format(os.path.split(locus_url)[1]))
-                logging.info('Downloading {}...'.format(os.path.split(locus_url)[1]))
+                output_file = os.path.join(self.output_folder, '{0}.tfa'.format(os.path.split(locus_url)[1]))
+                logging.info('Downloading {0}...'.format(os.path.split(locus_url)[1]))
                 with open(output_file, 'w') as f:
                     download = session.get(locus_url + '/alleles_fasta')
                     if download.status_code == 200 or download.status_code == 201:
@@ -138,7 +138,7 @@ class RmlstRest(object):
          
         # Get the consumer secret set up.
         if not os.path.isfile(consumer_secret_file):
-            logging.error('ERROR: Could not find consumer secret file. Please make sure the file you specified ({}) exists '
+            logging.error('ERROR: Could not find consumer secret file. Please make sure the file you specified ({0}) exists '
                           'and try again.'.format(consumer_secret_file))
             quit(code=1)
         with open(consumer_secret_file) as f:
@@ -176,7 +176,7 @@ def create_gene_allele_file(profiles_file, gene_allele_file):
                     gene = 'BACT0000' + str(i)
                 if gene in row:
                     allele_number = row[gene]
-                    gene_allele = '{}_{}'.format(gene, allele_number)
+                    gene_allele = '{0}_{1}'.format(gene, allele_number)
                     if allele_number != 'N' and gene_allele not in genus_allele_info[genus]:
                         genus_allele_info[genus].append(gene_allele)
     with open(gene_allele_file, 'w') as f:
@@ -235,7 +235,7 @@ def main():
     current_month = datetime.datetime.utcnow().month
     current_day = datetime.datetime.utcnow().day
     with open(os.path.join(output_folder, 'download_date.txt'), 'w') as f:
-        f.write('{}-{}-{}'.format(current_year, current_month, current_day))
+        f.write('{0}-{1}-{2}'.format(current_year, current_month, current_day))
     logging.info('Finished downloading rmlst database!')
     
     
