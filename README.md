@@ -1,4 +1,5 @@
 # bacterialBercow
+[![DOI](https://zenodo.org/badge/178251691.svg)](https://zenodo.org/badge/latestdoi/178251691)
 
 bacterialBercow is a command-line tool for retrieving and curating complete bacterial plasmids from the [NCBI nucleotide](https://www.ncbi.nlm.nih.gov/nucleotide/) database; and for characterising and classifying contigs from your own bacterial sequence assemblies.
 
